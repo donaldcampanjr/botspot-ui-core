@@ -1,0 +1,61 @@
+
+# ✅ BotSpot – Builder.io AI Instructions & Deployment Checklist
+
+## Systematically Enforce These Rules
+
+- [ ] Always apply Tailwind classes using the existing `tailwind.config.js` tokens.
+- [ ] Always include light mode / dark mode support using `prefers-color-scheme` and `.dark` class.
+- [ ] Always apply **glass variants**: `.glass`, `.glass-frosted`, and `.glass-liquid` using shared utilities.
+- [ ] Never generate JSX in `.js` files — all components/hooks using JSX go in `.jsx` files.
+- [ ] Triple-check all import/export naming matches.
+- [ ] Validate `.env` variables before using them. Warn in dev if any are missing.
+- [ ] Optimize for accessibility (ARIA roles, labels, keyboard nav, contrast).
+- [ ] Animations must use Framer Motion and respect `prefers-reduced-motion`.
+- [ ] Every component must pass the full “Don’t Break the App” checklist before merge.
+
+---
+
+## 🔐 File & Code Integrity
+- [ ] No JSX in `.js` files. Use `.jsx` for anything rendering React components.
+- [ ] All import/export paths match the file system exactly (case-sensitive).
+- [ ] No missing file references in any page/component.
+- [ ] `npm run build` completes with no errors.
+- [ ] ESLint and Prettier pass — no warnings.
+
+## ⚙️ Environment & Config
+- [ ] All required `.env` variables validated at runtime with safe fallback defaults.
+- [ ] CI builds (`.github/workflows/ci.yml`) pass lint, build, and tests.
+- [ ] Tailwind tokens and utility classes are consistently used.
+
+## 🎨 UI Consistency
+- [ ] Light/dark mode visually correct on all components and routes.
+- [ ] `.glass`, `.glass-frosted`, `.glass-liquid` used where appropriate.
+- [ ] Layouts match Tailwind template structure — no janky spacing.
+- [ ] Text contrast over glass is always WCAG 2.1 AA+ compliant.
+
+## ♿ Accessibility (A11y)
+- [ ] Interactive components have ARIA attributes.
+- [ ] Full keyboard navigation works logically across pages.
+- [ ] Focus styles are visible using `.ring-focus` utility.
+- [ ] Motion animations respect system `prefers-reduced-motion` settings.
+
+## 🛡️ Security & Session
+- [ ] Default new role is `Daily User`.
+- [ ] Auth route guards in place with fallback redirects.
+- [ ] Tokens securely stored (prefer `httpOnly`; fallback is encrypted localStorage).
+- [ ] No sensitive data exposed in logs.
+
+## 🚀 Deployment Readiness
+- [ ] No dev-only console output or errors.
+- [ ] All documentation updated (`README.md`, `IMPLEMENTATION_SUMMARY.md`, etc.).
+- [ ] Smoke/unit/E2E tests run clean locally and via CI.
+- [ ] Version bumped or changelog updated.
+
+---
+
+> ⚠️ **If any box remains unchecked, DO NOT MERGE OR DEPLOY.**
+> Break the rules, break the app.
+
+---
+
+**BotSpot Builder.io Instructions** – vNext (for Builder.io Custom AI Settings)
