@@ -56,6 +56,14 @@ export function DashboardLayout({ children, userRole = 'Daily User' }) {
 
   const navigation = getDashboardNavigation(userRole)
   const isActive = (href) => location.pathname === href
+  const navigate = useNavigate()
+
+  const handleLogout = async () => {
+    try {
+      await apiFetch('/auth/logout', { method: 'POST' })
+    } catch {}
+    navigate('/auth/login')
+  }
 
   return (
     <div className="h-screen flex bg-gray-50 dark:bg-gray-900">
