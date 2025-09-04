@@ -14,6 +14,8 @@ import {
   Search
 } from 'lucide-react'
 import { ThemeToggle } from '../components/ThemeToggle'
+import { useNavigate } from 'react-router-dom'
+import { apiFetch } from '../utils/api'
 
 export function DashboardLayout({ children, userRole = 'Daily User' }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
