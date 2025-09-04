@@ -14,7 +14,7 @@ export function Register() {
     setError('')
     setSuccess('')
     try {
-      const res = await apiFetch('/api/auth/register', {
+      const res = await apiFetch('/auth/register', {
         method: 'POST',
         body: JSON.stringify({ username, email, password }),
       })
