@@ -202,6 +202,7 @@ export function DashboardLayout({ children, userRole = 'Daily User' }) {
               <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
             </button>
             <ThemeToggle />
+            <button onClick={handleLogout} className="btn-secondary py-2 px-3" aria-label="Logout">Logout</button>
           </div>
         </header>
 
