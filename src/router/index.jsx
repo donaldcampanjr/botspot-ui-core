@@ -17,6 +17,10 @@ import { DeveloperDashboard } from '../pages/dashboard/DeveloperDashboard'
 // Error pages
 import { NotFound } from '../pages/NotFound'
 
+// Auth pages
+import { Login } from '../pages/auth/Login'
+import { Register } from '../pages/auth/Register'
+
 export const router = createBrowserRouter([
   {
     path: '/',
