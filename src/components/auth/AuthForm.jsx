@@ -1,14 +1,24 @@
 import { useState, useMemo } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
+import { validateEnvVars } from '../../utils/index.js'
 import clsx from 'clsx'
 
-export function AuthForm({ mode = 'login', onSubmit, loading = false, error = '', success = '', defaultValues = {} }) {
+const hasEnv = validateEnvVars(['VITE_API_BASE'])
+const API_BASE = (import.meta.env.VITE_API_BASE || '').replace(/\/$/, '')
+
+export function AuthForm({ mode = 'login', defaultValues = {} }) {
   const [form, setForm] = useState({
     username: defaultValues.username || '',
     email: defaultValues.email || '',
     password: defaultValues.password || '',
   })
   const prefersReduced = useReducedMotion()
+  const navigate = useNavigate()
+
+  const [submitting, setSubmitting] = useState(false)
+  const [errMsg, setErrMsg] = useState('')
+  const [successMsg, setSuccessMsg] = useState('')
 
   const isRegister = mode === 'register'
 
@@ -26,6 +36,41 @@ export function AuthForm({ mode = 'login', onSubmit, loading = false, error = ''
     initial: { opacity: 0, y: prefersReduced ? 0 : 16 },
     animate: { opacity: 1, y: 0 },
     exit: { opacity: 0, y: prefersReduced ? 0 : -16 },
+  }
+
+  const doSubmit = async () => {
+    setErrMsg('')
+    setSuccessMsg('')
+
+    if (!API_BASE) {
+      setErrMsg('Missing VITE_API_BASE environment variable')
+      return
+    }
+
+    const endpoint = `${API_BASE}/auth/${isRegister ? 'register' : 'login'}`
+    const payload = isRegister ? { username: form.username, email: form.email, password: form.password } : { email: form.email, password: form.password }
+
+    setSubmitting(true)
+    try {
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const contentType = res.headers.get('content-type') || ''
+      const data = contentType.includes('application/json') ? await res.json().catch(() => null) : null
+      if (!res.ok || (data && data.ok === false)) {
+        setErrMsg(data?.error || data?.message || 'Request failed')
+        return
+      }
+      if (isRegister) setSuccessMsg('Account created. Check your email to verify.')
+      navigate('/dashboard')
+    } catch (e) {
+      setErrMsg('Network error. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -51,7 +96,7 @@ export function AuthForm({ mode = 'login', onSubmit, loading = false, error = ''
         </div>
 
         <form
-          onSubmit={(e) => { e.preventDefault(); if (canSubmit && onSubmit) onSubmit({ ...form }) }}
+          onSubmit={(e) => { e.preventDefault(); if (canSubmit) doSubmit() }}
           className="space-y-4"
         >
           <AnimatePresence initial={false}>
@@ -105,20 +150,20 @@ export function AuthForm({ mode = 'login', onSubmit, loading = false, error = ''
 
           <button
             type="submit"
-            disabled={!canSubmit || loading}
+            disabled={!canSubmit || submitting}
             className={clsx(
               'w-full btn-primary',
               'disabled:opacity-60 disabled:cursor-not-allowed'
             )}
-            aria-busy={loading}
+            aria-busy={submitting}
           >
-            {loading ? (isRegister ? 'Creating account...' : 'Signing in...') : (isRegister ? 'Sign up' : 'Sign in')}
+            {submitting ? (isRegister ? 'Creating account...' : 'Signing in...') : (isRegister ? 'Sign up' : 'Sign in')}
           </button>
         </form>
 
         <div className="mt-4 space-y-2" aria-live="polite" aria-atomic="true">
           <AnimatePresence>
-            {error && (
+            {errMsg && (
               <motion.div
                 key="error"
                 initial={{ opacity: 0, y: prefersReduced ? 0 : 8 }}
@@ -128,12 +173,12 @@ export function AuthForm({ mode = 'login', onSubmit, loading = false, error = ''
                 className="rounded-lg p-3 bg-red-500/20 border border-red-500/40 text-red-900 dark:text-red-100"
                 role="alert"
               >
-                {error}
+                {errMsg}
               </motion.div>
             )}
           </AnimatePresence>
           <AnimatePresence>
-            {success && (
+            {successMsg && (
               <motion.div
                 key="success"
                 initial={{ opacity: 0, y: prefersReduced ? 0 : 8 }}
@@ -143,7 +188,7 @@ export function AuthForm({ mode = 'login', onSubmit, loading = false, error = ''
                 className="rounded-lg p-3 bg-green-500/20 border border-green-500/40 text-green-900 dark:text-green-100"
                 role="status"
               >
-                {success}
+                {successMsg}
               </motion.div>
             )}
           </AnimatePresence>
