@@ -1,0 +1,13 @@
+name = "botspot-api"
+main = "workers/auth-worker.js"
+compatibility_date = "2025-09-07"
+workers_dev = true   # 👈 ADD THIS LINE
+
+[vars]
+APP_BASE_URL = "http://localhost:5173"
+SUPABASE_URL = "https://ejlofjoujgpxxxhaamyw.supabase.co"
+SUPABASE_ANON_KEY = "sb_publishable_U9JC4BlKGtpCGUQtMLSMYg_Sav4WjCX"
+SUPABASE_SERVICE_ROLE_KEY = "sb_secret_QhG-bDjjTr3nFew7lLhaSA_5uithrmh"
+RESEND_API_KEY = ""
+RESEND_FROM = ""
+TURNSTILE_SECRET_KEY = ""
