@@ -1,13 +1,13 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
-import { 
-  Home, 
-  BarChart3, 
-  Settings, 
-  Users, 
-  Bot, 
-  Menu, 
+import { Link, Outlet, useLocation } from 'react-router-dom'
+import {
+  Home,
+  BarChart3,
+  Settings,
+  Users,
+  Bot,
+  Menu,
   X,
   ChevronLeft,
   Bell,
@@ -15,7 +15,7 @@ import {
 } from 'lucide-react'
 import { ThemeToggle } from '../components/ThemeToggle'
 
-export function DashboardLayout({ children, userRole = 'Daily User' }) {
+export function DashboardLayout({ userRole = 'Daily User' }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const location = useLocation()
@@ -75,12 +75,14 @@ export function DashboardLayout({ children, userRole = 'Daily User' }) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex items-center space-x-2"
+              className="flex items-center"
             >
-              <Bot className="w-8 h-8 text-primary-600" />
-              <span className="text-xl font-bold text-gray-900 dark:text-white">
-                BotSpot
-              </span>
+              <Link to="/" className="flex items-center space-x-2 ring-focus rounded-lg p-1">
+                <Bot className="w-8 h-8 text-primary-600" />
+                <span className="text-xl font-bold text-gray-900 dark:text-white">
+                  BotSpot
+                </span>
+              </Link>
             </motion.div>
           )}
           <button
@@ -208,7 +210,7 @@ export function DashboardLayout({ children, userRole = 'Daily User' }) {
               }}
               className="p-6"
             >
-              {children}
+              <Outlet />
             </motion.div>
           </AnimatePresence>
         </main>
