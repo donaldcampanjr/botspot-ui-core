@@ -164,6 +164,9 @@ export default {
     if (!check.ok) return json({ error: check.error }, { status: 500 })
 
     // Router
+    if (request.method === 'GET' && path === '/api/auth/hello') {
+      return json({ message: 'Worker is live ✅' })
+    }
     if (request.method === 'POST' && path === '/api/auth/register') {
       const body = await request.json().catch(() => null)
       if (!body?.email || !body?.password || !body?.username) return json({ error: 'Missing fields' }, { status: 400 })
@@ -209,14 +212,33 @@ export default {
       const headers = new Headers(JSON_HEADERS)
       headers.append('Set-Cookie', clearCookie('sb_access_token'))
       headers.append('Set-Cookie', clearCookie('sb_refresh_token'))
+      headers.append('Set-Cookie', clearCookie('sb:token'))
       return new Response(JSON.stringify({ ok: true }), { status: 200, headers })
+    }
+
+    if (request.method === 'GET' && path === '/api/auth/session') {
+      const cookies = request.headers.get('Cookie') || ''
+      const m1 = cookies.match(/sb_access_token=([^;]+)/)
+      const m2 = cookies.match(/sb:token=([^;]+)/)
+      const token = m1?.[1] || m2?.[1]
+      if (!token) return json({ loggedIn: false })
+      const res = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
+        headers: { apikey: env.SUPABASE_ANON_KEY, Authorization: `Bearer ${decodeURIComponent(token)}` }
+      })
+      if (res.ok) {
+        const user = await res.json().catch(() => null)
+        return json({ loggedIn: true, user })
+      }
+      return json({ loggedIn: false })
     }
 
     if (request.method === 'GET' && path === '/api/auth/me') {
       const cookies = request.headers.get('Cookie') || ''
-      const match = cookies.match(/sb_access_token=([^;]+)/)
-      if (!match) return json({ error: 'Unauthorized' }, { status: 401 })
-      const access = decodeURIComponent(match[1])
+      const m1 = cookies.match(/sb_access_token=([^;]+)/)
+      const m2 = cookies.match(/sb:token=([^;]+)/)
+      const token = m1?.[1] || m2?.[1]
+      if (!token) return json({ error: 'Unauthorized' }, { status: 401 })
+      const access = decodeURIComponent(token)
       const me = await getUserWithRole(env, access)
       if (!me.ok) return json({ error: me.error }, { status: me.status || 401 })
       return json({ ok: true, user: me.data.user })
