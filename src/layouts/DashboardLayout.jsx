@@ -85,12 +85,14 @@ export function DashboardLayout({ userRole = 'Daily User' }) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex items-center space-x-2"
+              className="flex items-center"
             >
-              <Bot className="w-8 h-8 text-primary-600" />
-              <span className="text-xl font-bold text-gray-900 dark:text-white">
-                BotSpot
-              </span>
+              <Link to="/" className="flex items-center space-x-2 ring-focus rounded-lg p-1">
+                <Bot className="w-8 h-8 text-primary-600" />
+                <span className="text-xl font-bold text-gray-900 dark:text-white">
+                  BotSpot
+                </span>
+              </Link>
             </motion.div>
           )}
           <button
