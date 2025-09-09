@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, Outlet } from 'react-router-dom'
 import { 
   Home, 
   BarChart3, 
@@ -17,7 +17,7 @@ import { ThemeToggle } from '../components/ThemeToggle'
 import { useNavigate } from 'react-router-dom'
 import { apiFetch } from '../utils/api'
 
-export function DashboardLayout({ children, userRole = 'Daily User' }) {
+export function DashboardLayout({ userRole = 'Daily User' }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const location = useLocation()
@@ -219,7 +219,7 @@ export function DashboardLayout({ children, userRole = 'Daily User' }) {
               }}
               className="p-6"
             >
-              {children}
+              <Outlet />
             </motion.div>
           </AnimatePresence>
         </main>
