@@ -167,6 +167,7 @@ export default {
     if (request.method === 'GET' && path === '/api/auth/hello') {
       return json({ message: 'Worker is live ✅' })
     }
+
     if (request.method === 'POST' && path === '/api/auth/register') {
       const body = await request.json().catch(() => null)
       if (!body?.email || !body?.password || !body?.username) return json({ error: 'Missing fields' }, { status: 400 })
