@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, Outlet } from 'react-router-dom'
 import { 
   Home, 
   BarChart3, 
@@ -14,8 +14,10 @@ import {
   Search
 } from 'lucide-react'
 import { ThemeToggle } from '../components/ThemeToggle'
+import { useNavigate } from 'react-router-dom'
+import { apiFetch } from '../utils/api'
 
-export function DashboardLayout({ children, userRole = 'Daily User' }) {
+export function DashboardLayout({ userRole = 'Daily User' }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const location = useLocation()
@@ -54,6 +56,14 @@ export function DashboardLayout({ children, userRole = 'Daily User' }) {
 
   const navigation = getDashboardNavigation(userRole)
   const isActive = (href) => location.pathname === href
+  const navigate = useNavigate()
+
+  const handleLogout = async () => {
+    try {
+      await apiFetch('/auth/logout', { method: 'POST' })
+    } catch {}
+    navigate('/auth/login')
+  }
 
   return (
     <div className="h-screen flex bg-gray-50 dark:bg-gray-900">
@@ -75,12 +85,14 @@ export function DashboardLayout({ children, userRole = 'Daily User' }) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex items-center space-x-2"
+              className="flex items-center"
             >
-              <Bot className="w-8 h-8 text-primary-600" />
-              <span className="text-xl font-bold text-gray-900 dark:text-white">
-                BotSpot
-              </span>
+              <Link to="/" className="flex items-center space-x-2 ring-focus rounded-lg p-1">
+                <Bot className="w-8 h-8 text-primary-600" />
+                <span className="text-xl font-bold text-gray-900 dark:text-white">
+                  BotSpot
+                </span>
+              </Link>
             </motion.div>
           )}
           <button
@@ -192,6 +204,7 @@ export function DashboardLayout({ children, userRole = 'Daily User' }) {
               <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
             </button>
             <ThemeToggle />
+            <button onClick={handleLogout} className="btn-secondary py-2 px-3" aria-label="Logout">Logout</button>
           </div>
         </header>
 
@@ -208,7 +221,7 @@ export function DashboardLayout({ children, userRole = 'Daily User' }) {
               }}
               className="p-6"
             >
-              {children}
+              <Outlet />
             </motion.div>
           </AnimatePresence>
         </main>

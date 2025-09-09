@@ -112,6 +112,34 @@ export function Home() {
         </div>
       </section>
 
+      {/* Quick Start Section */}
+      <section className="py-14 bg-surface-light dark:bg-surface-dark">
+        <div className="container-app">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4 }}
+            className="grid grid-cols-1 md:grid-cols-2 gap-6"
+          >
+            <Link to="/auth/login" className="group glass-frosted rounded-xl p-6 flex items-center justify-between ring-focus">
+              <div>
+                <h3 className="text-xl font-semibold mb-1">Sign in</h3>
+                <p className="text-gray-600 dark:text-gray-300">Access your dashboard and continue where you left off.</p>
+              </div>
+              <ArrowRight className="w-6 h-6 text-primary-600 transition-transform duration-200 group-hover:translate-x-1" aria-hidden="true" />
+            </Link>
+            <Link to="/auth/register" className="group glass-frosted rounded-xl p-6 flex items-center justify-between ring-focus">
+              <div>
+                <h3 className="text-xl font-semibold mb-1">Create account</h3>
+                <p className="text-gray-600 dark:text-gray-300">Start building with a free account. No credit card required.</p>
+              </div>
+              <ArrowRight className="w-6 h-6 text-primary-600 transition-transform duration-200 group-hover:translate-x-1" aria-hidden="true" />
+            </Link>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Features Section */}
       <section className="py-20 bg-white dark:bg-gray-800">
         <div className="container-app">

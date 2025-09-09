@@ -1,8 +1,9 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { Header } from '../components/Header'
 import { Footer } from '../components/Footer'
+import { Outlet } from 'react-router-dom'
 
-export function MainLayout({ children }) {
+export function MainLayout() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -17,7 +18,7 @@ export function MainLayout({ children }) {
               ease: 'easeInOut',
             }}
           >
-            {children}
+            <Outlet />
           </motion.div>
         </AnimatePresence>
       </main>
