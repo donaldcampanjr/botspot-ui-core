@@ -92,17 +92,28 @@ export function AuthForm({ mode = 'login' }) {
           <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Password
           </label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-2 rounded-lg bg-white/60 dark:bg-gray-800/60 border border-white/30 dark:border-gray-700/30 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 ring-focus"
-            placeholder="••••••••"
-          />
+          <div className="relative">
+            <input
+              id="password"
+              name="password"
+              type={showPassword ? 'text' : 'password'}
+              autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full pr-10 px-4 py-2 rounded-lg bg-white/60 dark:bg-gray-800/60 border border-white/30 dark:border-gray-700/30 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 ring-focus"
+              placeholder="••••••••"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((s) => !s)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md hover:bg-white/40 dark:hover:bg-gray-700/40 ring-focus"
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+            </button>
+          </div>
+          <PasswordStrength value={password} />
         </div>
 
         {error && (
