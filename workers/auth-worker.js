@@ -91,6 +91,15 @@ export default {
             },
             body: JSON.stringify({ user_id: data.user.id, role: 'Daily User' }),
           })
+          await fetch(`${env.SUPABASE_URL}/auth/v1/admin/users/${data.user.id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+              Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+            },
+            body: JSON.stringify({ user_metadata: { ...(data.user.user_metadata || {}), role: 'Daily User' } }),
+          })
         }
       } catch {}
 
