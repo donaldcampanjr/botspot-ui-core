@@ -177,6 +177,28 @@ export default {
         })
       }
 
+      // Auto-confirm email if no email service configured
+      if (!env.RESEND_API_KEY && env.SUPABASE_SERVICE_ROLE_KEY && user?.id) {
+        try {
+          await fetch(`${env.SUPABASE_URL}/auth/v1/admin/users/${user.id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+              Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+            },
+            body: JSON.stringify({
+              email_confirm: true
+            }),
+          })
+          debugInfo.emailConfirmed = true
+        } catch (error) {
+          debugInfo.emailConfirmed = false
+        }
+      } else {
+        debugInfo.emailConfirmed = !!env.RESEND_API_KEY
+      }
+
       // Auto-login after successful signup
       const loginRes = await supabaseFetch('/auth/v1/token?grant_type=password', 'POST', { email, password })
       const loginData = await loginRes.json().catch(() => ({}))
