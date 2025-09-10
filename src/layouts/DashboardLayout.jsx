@@ -65,7 +65,10 @@ export function DashboardLayout() {
   }
 
   return (
-    <div className="min-h-screen grid grid-rows-[auto_1fr] bg-surface-light dark:bg-surface-dark">
+    <div className="min-h-screen grid grid-rows-[auto_1fr] bg-surface-light dark:bg-surface-dark relative overflow-hidden">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute -top-16 right-0 w-96 h-96 rounded-full bg-primary-400/15 dark:bg-primary-700/15 blur-3xl" />
+      </div>
       {/* HUD top bar */}
       <motion.header
         initial={false}
