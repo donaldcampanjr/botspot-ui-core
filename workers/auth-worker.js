@@ -1,99 +1,152 @@
 export default {
   async fetch(request, env) {
-    const url = new URL(request.url);
-    const { pathname } = url;
+    const url = new URL(request.url)
+    const { pathname } = url
 
-    // Helper: parse request body
-    async function parseBody(req) {
-      try {
-        return await req.json();
-      } catch {
-        return {};
-      }
+    const corsHeaders = {
+      'Access-Control-Allow-Origin': env.APP_BASE_URL,
+      'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Allow-Credentials': 'true',
     }
 
-    // Helper: Supabase request
+    if (request.method === 'OPTIONS') {
+      return new Response(null, { headers: corsHeaders })
+    }
+
+    // Helpers
+    async function parseBody(req) {
+      try { return await req.json() } catch { return {} }
+    }
+    function withHeaders(extra = {}) {
+      return { ...corsHeaders, ...extra }
+    }
     async function supabaseFetch(endpoint, method, body, key = env.SUPABASE_ANON_KEY) {
       return fetch(`${env.SUPABASE_URL}${endpoint}`, {
         method,
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           apikey: key,
           Authorization: `Bearer ${key}`,
         },
         body: body ? JSON.stringify(body) : undefined,
-      });
+      })
+    }
+    async function sendWelcomeEmail(email) {
+      if (!env.RESEND_API_KEY || !env.RESEND_FROM) return
+      try {
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${env.RESEND_API_KEY}`,
+          },
+          body: JSON.stringify({
+            from: env.RESEND_FROM,
+            to: email,
+            subject: 'Welcome to BotSpot 🎉',
+            html: `<p>Hi ${email}, welcome to BotSpot! Your account is ready.</p>`
+          }),
+        })
+      } catch {}
     }
 
     // Health check
-    if (pathname === "/api/auth/hello") {
-      return new Response(JSON.stringify({ message: "Worker is live ✅" }), {
-        headers: { "Content-Type": "application/json" },
-      });
+    if (pathname === '/api/auth/hello') {
+      return new Response(JSON.stringify({ message: 'Worker is live ✅' }), {
+        headers: withHeaders({ 'Content-Type': 'application/json' }),
+      })
     }
 
     // REGISTER
-    if (pathname === "/api/auth/register" && request.method === "POST") {
-      const { email, password } = await parseBody(request);
+    if (pathname === '/api/auth/register' && request.method === 'POST') {
+      const { email, password } = await parseBody(request)
+      if (!email || !password) {
+        return new Response(JSON.stringify({ error: 'Email and password required' }), {
+          status: 400,
+          headers: withHeaders({ 'Content-Type': 'application/json' }),
+        })
+      }
 
-      const res = await supabaseFetch("/auth/v1/signup", "POST", {
-        email,
-        password,
-      });
+      const res = await supabaseFetch('/auth/v1/signup', 'POST', { email, password })
+      const data = await res.json().catch(() => ({}))
 
-      const data = await res.json();
-      return new Response(JSON.stringify(data), {
-        headers: { "Content-Type": "application/json" },
-        status: res.status,
-      });
+      if (!res.ok) {
+        return new Response(JSON.stringify({ error: data?.msg || data?.error_description || 'Registration failed' }), {
+          status: res.status,
+          headers: withHeaders({ 'Content-Type': 'application/json' }),
+        })
+      }
+
+      // Auto-login after successful signup
+      const loginRes = await supabaseFetch('/auth/v1/token?grant_type=password', 'POST', { email, password })
+      const loginData = await loginRes.json().catch(() => ({}))
+
+      // Fire-and-forget welcome email
+      await sendWelcomeEmail(email)
+
+      if (loginRes.ok && loginData?.access_token) {
+        return new Response(JSON.stringify({ success: true }), {
+          headers: withHeaders({
+            'Content-Type': 'application/json',
+            'Set-Cookie': `sb:token=${loginData.access_token}; HttpOnly; Path=/; Secure; SameSite=Lax`,
+          }),
+        })
+      }
+
+      // If cannot auto-login, still return success
+      return new Response(JSON.stringify({ success: true }), {
+        headers: withHeaders({ 'Content-Type': 'application/json' }),
+      })
     }
 
     // LOGIN
-    if (pathname === "/api/auth/login" && request.method === "POST") {
-      const { email, password } = await parseBody(request);
-
-      const res = await supabaseFetch("/auth/v1/token?grant_type=password", "POST", {
-        email,
-        password,
-      });
-
-      const data = await res.json();
-
-      if (res.ok && data.access_token) {
-        // Set cookie
-        return new Response(JSON.stringify({ success: true }), {
-          headers: {
-            "Content-Type": "application/json",
-            "Set-Cookie": `sb:token=${data.access_token}; HttpOnly; Path=/; Secure; SameSite=Lax`,
-          },
-        });
+    if (pathname === '/api/auth/login' && request.method === 'POST') {
+      const { email, password } = await parseBody(request)
+      if (!email || !password) {
+        return new Response(JSON.stringify({ error: 'Email and password required' }), {
+          status: 400,
+          headers: withHeaders({ 'Content-Type': 'application/json' }),
+        })
       }
 
-      return new Response(JSON.stringify(data), {
-        headers: { "Content-Type": "application/json" },
+      const res = await supabaseFetch('/auth/v1/token?grant_type=password', 'POST', { email, password })
+      const data = await res.json().catch(() => ({}))
+
+      if (res.ok && data?.access_token) {
+        return new Response(JSON.stringify({ success: true }), {
+          headers: withHeaders({
+            'Content-Type': 'application/json',
+            'Set-Cookie': `sb:token=${data.access_token}; HttpOnly; Path=/; Secure; SameSite=Lax`,
+          }),
+        })
+      }
+
+      return new Response(JSON.stringify({ error: data?.error_description || 'Invalid credentials' }), {
         status: res.status,
-      });
+        headers: withHeaders({ 'Content-Type': 'application/json' }),
+      })
     }
 
     // LOGOUT
-    if (pathname === "/api/auth/logout" && request.method === "POST") {
+    if (pathname === '/api/auth/logout' && request.method === 'POST') {
       return new Response(JSON.stringify({ success: true }), {
-        headers: {
-          "Content-Type": "application/json",
-          "Set-Cookie": "sb:token=; HttpOnly; Path=/; Secure; SameSite=Lax; Max-Age=0",
-        },
-      });
+        headers: withHeaders({
+          'Content-Type': 'application/json',
+          'Set-Cookie': 'sb:token=; HttpOnly; Path=/; Secure; SameSite=Lax; Max-Age=0',
+        }),
+      })
     }
 
-    // VERIFY (check if logged in)
-    if (pathname === "/api/auth/verify") {
-      const cookie = request.headers.get("Cookie") || "";
-      const token = cookie.split("sb:token=")[1]?.split(";")[0];
+    // VERIFY
+    if (pathname === '/api/auth/verify') {
+      const cookie = request.headers.get('Cookie') || ''
+      const token = cookie.split('sb:token=')[1]?.split(';')[0]
 
       if (!token) {
         return new Response(JSON.stringify({ loggedIn: false }), {
-          headers: { "Content-Type": "application/json" },
-        });
+          headers: withHeaders({ 'Content-Type': 'application/json' }),
+        })
       }
 
       const res = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
@@ -101,30 +154,30 @@ export default {
           apikey: env.SUPABASE_ANON_KEY,
           Authorization: `Bearer ${token}`,
         },
-      });
+      })
 
       if (res.ok) {
-        const user = await res.json();
+        const user = await res.json()
         return new Response(JSON.stringify({ loggedIn: true, user }), {
-          headers: { "Content-Type": "application/json" },
-        });
+          headers: withHeaders({ 'Content-Type': 'application/json' }),
+        })
       }
 
       return new Response(JSON.stringify({ loggedIn: false }), {
-        headers: { "Content-Type": "application/json" },
-      });
+        headers: withHeaders({ 'Content-Type': 'application/json' }),
+      })
     }
 
-    // ME (return logged in user)
-    if (pathname === "/api/auth/me") {
-      const cookie = request.headers.get("Cookie") || "";
-      const token = cookie.split("sb:token=")[1]?.split(";")[0];
+    // ME
+    if (pathname === '/api/auth/me') {
+      const cookie = request.headers.get('Cookie') || ''
+      const token = cookie.split('sb:token=')[1]?.split(';')[0]
 
       if (!token) {
-        return new Response(JSON.stringify({ error: "Not authenticated" }), {
+        return new Response(JSON.stringify({ error: 'Not authenticated' }), {
           status: 401,
-          headers: { "Content-Type": "application/json" },
-        });
+          headers: withHeaders({ 'Content-Type': 'application/json' }),
+        })
       }
 
       const res = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
@@ -132,19 +185,19 @@ export default {
           apikey: env.SUPABASE_ANON_KEY,
           Authorization: `Bearer ${token}`,
         },
-      });
+      })
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}))
       return new Response(JSON.stringify(data), {
-        headers: { "Content-Type": "application/json" },
         status: res.status,
-      });
+        headers: withHeaders({ 'Content-Type': 'application/json' }),
+      })
     }
 
     // Default 404
-    return new Response(JSON.stringify({ error: "Not Found" }), {
+    return new Response(JSON.stringify({ error: 'Not Found' }), {
       status: 404,
-      headers: { "Content-Type": "application/json" },
-    });
+      headers: withHeaders({ 'Content-Type': 'application/json' }),
+    })
   },
-};
+}
