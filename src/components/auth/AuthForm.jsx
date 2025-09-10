@@ -48,7 +48,18 @@ export function AuthForm({ mode = 'login' }) {
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({ error: 'Authentication failed' }))
-        setError(data.error || data.message || 'Authentication failed')
+        let errorMsg = data.error || data.message || 'Authentication failed'
+
+        // Handle specific Supabase error codes
+        if (errorMsg.includes('email_already_registered') || errorMsg.includes('User already registered')) {
+          errorMsg = 'An account with this email already exists. Try logging in instead.'
+        } else if (errorMsg.includes('weak_password')) {
+          errorMsg = 'Password is too weak. Please use a stronger password.'
+        } else if (errorMsg.includes('signup_disabled')) {
+          errorMsg = 'Registration is currently disabled.'
+        }
+
+        setError(errorMsg)
       } else {
         const to = location.state?.from?.pathname || '/dashboard'
         navigate(to, { replace: true })
