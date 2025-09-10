@@ -10,8 +10,6 @@ import { Features } from '../pages/Features'
 import { About } from '../pages/About'
 
 // Dashboard pages
-import { DashboardOverview } from '../pages/dashboard/DashboardOverview'
-import { DailyUserDashboard } from '../pages/dashboard/DailyUserDashboard'
 import { AdminDashboard } from '../pages/dashboard/AdminDashboard'
 import { ManagerDashboard } from '../pages/dashboard/ManagerDashboard'
 import { DeveloperDashboard } from '../pages/dashboard/DeveloperDashboard'
