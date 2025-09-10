@@ -1,18 +1,21 @@
 import { createBrowserRouter } from 'react-router-dom'
 import { MainLayout } from '../layouts/MainLayout'
 import { DashboardLayout } from '../layouts/DashboardLayout'
+import { ProtectedRoute } from '../components/auth/ProtectedRoute'
+import DashboardIndex from '../pages/dashboard/Index'
 
 // Pages
 import { Home } from '../pages/Home'
 import { Features } from '../pages/Features'
 import { About } from '../pages/About'
+import Login from '../pages/auth/Login'
+import Register from '../pages/auth/Register'
 
 // Dashboard pages
-import { DashboardOverview } from '../pages/dashboard/DashboardOverview'
-import { DailyUserDashboard } from '../pages/dashboard/DailyUserDashboard'
 import { AdminDashboard } from '../pages/dashboard/AdminDashboard'
 import { ManagerDashboard } from '../pages/dashboard/ManagerDashboard'
 import { DeveloperDashboard } from '../pages/dashboard/DeveloperDashboard'
+import { AdminRoute } from '../components/auth/AdminRoute'
 
 // Error pages
 import { NotFound } from '../pages/NotFound'
@@ -35,33 +38,34 @@ export const router = createBrowserRouter([
         path: 'about',
         element: <About />,
       },
+      {
+        path: 'auth/login',
+        element: <Login />,
+      },
+      {
+        path: 'auth/register',
+        element: <Register />,
+      },
     ],
   },
   {
     path: '/dashboard',
-    element: <DashboardLayout userRole="Daily User" />,
+    element: (
+      <ProtectedRoute>
+        <DashboardLayout />
+      </ProtectedRoute>
+    ),
     children: [
-      {
-        index: true,
-        element: <DashboardOverview />,
-      },
-      {
-        path: 'analytics',
-        element: <DashboardOverview />, // Will be replaced with actual analytics
-      },
-      {
-        path: 'bots',
-        element: <DashboardOverview />, // Will be replaced with bot management
-      },
-      {
-        path: 'settings',
-        element: <DashboardOverview />, // Will be replaced with settings
-      },
+      { index: true, element: <DashboardIndex /> },
     ],
   },
   {
     path: '/admin',
-    element: <DashboardLayout userRole="Admin" />,
+    element: (
+      <AdminRoute>
+        <DashboardLayout />
+      </AdminRoute>
+    ),
     children: [
       {
         index: true,
@@ -79,7 +83,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/manager',
-    element: <DashboardLayout userRole="Manager" />,
+    element: <DashboardLayout />,
     children: [
       {
         index: true,
@@ -93,7 +97,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/developer',
-    element: <DashboardLayout userRole="Developer" />,
+    element: <DashboardLayout />,
     children: [
       {
         index: true,

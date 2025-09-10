@@ -1,220 +1,169 @@
-import { motion, AnimatePresence } from 'framer-motion'
-import { useState } from 'react'
-import { Link, Outlet, useLocation } from 'react-router-dom'
-import {
-  Home,
-  BarChart3,
-  Settings,
-  Users,
-  Bot,
-  Menu,
-  X,
-  ChevronLeft,
-  Bell,
-  Search
-} from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { motion, useReducedMotion } from 'framer-motion'
+import { Bot, Home, PanelsTopLeft, Info, Shield, LogOut } from 'lucide-react'
 import { ThemeToggle } from '../components/ThemeToggle'
+import { validateEnvVars } from '../utils'
 
-export function DashboardLayout({ userRole = 'Daily User' }) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+export function DashboardLayout() {
+  const [scrolled, setScrolled] = useState(false)
+  const [role, setRole] = useState('Daily User')
+  const navigate = useNavigate()
   const location = useLocation()
+  const shouldReduceMotion = useReducedMotion()
 
-  // Define navigation based on user role
-  const getDashboardNavigation = (role) => {
-    const baseNav = [
-      { name: 'Overview', href: '/dashboard', icon: Home },
-      { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
-    ]
+  useEffect(() => {
+    validateEnvVars(['VITE_API_BASE'])
+  }, [])
 
-    const roleSpecificNav = {
-      'Daily User': [
-        { name: 'My Bots', href: '/dashboard/bots', icon: Bot },
-        { name: 'Settings', href: '/dashboard/settings', icon: Settings },
-      ],
-      'Admin': [
-        { name: 'User Management', href: '/dashboard/users', icon: Users },
-        { name: 'System Settings', href: '/dashboard/system', icon: Settings },
-        { name: 'Bot Management', href: '/dashboard/bots', icon: Bot },
-      ],
-      'Manager': [
-        { name: 'Team Overview', href: '/dashboard/team', icon: Users },
-        { name: 'Bot Management', href: '/dashboard/bots', icon: Bot },
-        { name: 'Settings', href: '/dashboard/settings', icon: Settings },
-      ],
-      'Developer': [
-        { name: 'API Console', href: '/dashboard/api', icon: Settings },
-        { name: 'Bot Development', href: '/dashboard/dev-bots', icon: Bot },
-        { name: 'Documentation', href: '/dashboard/docs', icon: BarChart3 },
-      ],
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8)
+    onScroll()
+    window.addEventListener('scroll', onScroll)
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  useEffect(() => {
+    let isMounted = true
+    const loadRole = async () => {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_BASE}/auth/me`, {
+          credentials: 'include',
+        })
+        if (!res.ok) return
+        const user = await res.json()
+        const raw = user?.user_metadata?.role || user?.app_metadata?.role || 'Daily User'
+        if (isMounted) setRole(typeof raw === 'string' ? raw : 'Daily User')
+      } catch {}
     }
+    loadRole()
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
-    return [...baseNav, ...(roleSpecificNav[role] || roleSpecificNav['Daily User'])]
+  const isAdmin = useMemo(() => String(role || '').toLowerCase() === 'admin', [role])
+
+  const navItems = useMemo(
+    () => [
+      { name: 'Dashboard', to: '/dashboard', icon: Home },
+      { name: 'Features', to: '/features', icon: PanelsTopLeft },
+      { name: 'About', to: '/about', icon: Info },
+      ...(isAdmin ? [{ name: 'Admin', to: '/admin', icon: Shield }] : []),
+    ],
+    [isAdmin]
+  )
+
+  const handleLogout = async () => {
+    try {
+      await fetch(`${import.meta.env.VITE_API_BASE}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+      })
+    } catch {}
+    navigate('/auth/login', { replace: true })
   }
 
-  const navigation = getDashboardNavigation(userRole)
-  const isActive = (href) => location.pathname === href
-
   return (
-    <div className="h-screen flex bg-gray-50 dark:bg-gray-900">
-      {/* Sidebar */}
-      <motion.aside
+    <div className="min-h-screen grid grid-rows-[auto_1fr] bg-surface-light dark:bg-surface-dark relative overflow-hidden">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute -top-16 right-0 w-96 h-96 rounded-full bg-primary-400/15 dark:bg-primary-700/15 blur-3xl" />
+      </div>
+      {/* HUD top bar */}
+      <motion.header
         initial={false}
         animate={{
-          width: sidebarCollapsed ? 64 : 256,
+          boxShadow: scrolled ? '0 10px 30px rgba(0,0,0,0.1)' : '0 0 0 rgba(0,0,0,0)',
+          y: scrolled && !shouldReduceMotion ? -2 : 0,
         }}
-        transition={{ duration: 0.3, ease: 'easeInOut' }}
-        className={`relative flex flex-col bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 ${
-          sidebarOpen ? 'fixed inset-y-0 left-0 z-50 w-64 lg:static lg:z-auto' : 'hidden lg:flex'
-        }`}
+        transition={{ duration: shouldReduceMotion ? 0 : 0.2 }}
+        className="sticky top-0 z-40 glass-frosted"
+        aria-label="Dashboard HUD"
       >
-        {/* Sidebar header */}
-        <div className="flex items-center justify-between px-4 py-4 border-b border-gray-200 dark:border-gray-700">
-          {!sidebarCollapsed && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex items-center"
-            >
-              <Link to="/" className="flex items-center space-x-2 ring-focus rounded-lg p-1">
-                <Bot className="w-8 h-8 text-primary-600" />
-                <span className="text-xl font-bold text-gray-900 dark:text-white">
-                  BotSpot
-                </span>
-              </Link>
-            </motion.div>
-          )}
-          <button
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 ring-focus hidden lg:flex"
-            aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          >
-            <ChevronLeft 
-              className={`w-5 h-5 transition-transform duration-200 ${
-                sidebarCollapsed ? 'rotate-180' : ''
-              }`} 
-            />
-          </button>
-          <button
-            onClick={() => setSidebarOpen(false)}
-            className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 ring-focus lg:hidden"
-            aria-label="Close sidebar"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* User info */}
-        {!sidebarCollapsed && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="px-4 py-3 border-b border-gray-200 dark:border-gray-700"
-          >
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-medium">U</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                  User Name
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                  {userRole}
-                </p>
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Navigation */}
-        <nav className="flex-1 px-4 py-4 space-y-2 overflow-y-auto scrollbar-thin">
-          {navigation.map((item) => (
-            <Link
-              key={item.name}
-              to={item.href}
-              className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors duration-200 ring-focus ${
-                isActive(item.href)
-                  ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-              }`}
-              title={sidebarCollapsed ? item.name : undefined}
-            >
-              <item.icon className="w-5 h-5 flex-shrink-0" />
-              {!sidebarCollapsed && (
-                <span className="font-medium">{item.name}</span>
-              )}
-            </Link>
-          ))}
-        </nav>
-      </motion.aside>
-
-      {/* Mobile sidebar overlay */}
-      <AnimatePresence>
-        {sidebarOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setSidebarOpen(false)}
-            className="fixed inset-0 bg-gray-600 bg-opacity-75 z-40 lg:hidden"
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top bar */}
-        <header className="flex items-center justify-between px-6 py-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 ring-focus lg:hidden"
-              aria-label="Open sidebar"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search..."
-                className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 ring-focus"
-              />
-            </div>
-          </div>
-          <div className="flex items-center space-x-4">
-            <button
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 ring-focus relative"
-              aria-label="Notifications"
-            >
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
+        <div className="container-app flex items-center justify-between py-3">
+          <Link to="/dashboard" className="flex items-center gap-2 ring-focus rounded-lg px-1 py-1">
+            <Bot className="w-7 h-7 text-primary-600" />
+            <span className="text-lg font-semibold text-gray-900 dark:text-white">BotSpot</span>
+          </Link>
+          <div className="flex items-center gap-2">
             <ThemeToggle />
-          </div>
-        </header>
-
-        {/* Page content */}
-        <main className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-900" role="main">
-          <AnimatePresence mode="wait">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{
-                duration: 0.3,
-                ease: 'easeInOut',
-              }}
-              className="p-6"
+            <motion.button
+              whileHover={{ scale: shouldReduceMotion ? 1 : 1.03 }}
+              whileTap={{ scale: shouldReduceMotion ? 1 : 0.97 }}
+              onClick={handleLogout}
+              className="btn-secondary flex items-center gap-2"
+              aria-label="Logout"
             >
-              <Outlet />
-            </motion.div>
-          </AnimatePresence>
+              <LogOut className="w-4 h-4" />
+              <span className="hidden sm:inline">Logout</span>
+            </motion.button>
+          </div>
+        </div>
+      </motion.header>
+
+      <div className="container-app grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-6 py-6 w-full">
+        {/* Side navigation */}
+        <nav aria-label="Dashboard navigation" className="hidden lg:block">
+          <div className="glass rounded-2xl p-3 shadow-lg">
+            <ul className="space-y-1">
+              {navItems.map((item) => (
+                <li key={item.to}>
+                  <NavLink
+                    to={item.to}
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 px-3 py-2 rounded-xl transition-colors duration-200 ring-focus ${
+                        isActive || location.pathname === item.to
+                          ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300'
+                          : 'text-gray-700 dark:text-gray-300 hover:bg-white/20 dark:hover:bg-gray-800/40'
+                      }`
+                    }
+                  >
+                    <item.icon className="w-5 h-5" />
+                    <span className="font-medium">{item.name}</span>
+                  </NavLink>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </nav>
+
+        {/* Content */}
+        <main className="min-h-[60vh]">
+          <motion.div
+            initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: shouldReduceMotion ? 0 : 0.25 }}
+            className="space-y-6"
+          >
+            <Outlet />
+          </motion.div>
         </main>
       </div>
+
+      {/* Bottom nav for small screens */}
+      <nav aria-label="Mobile navigation" className="fixed bottom-4 inset-x-0 px-4 lg:hidden">
+        <div className="mx-auto max-w-md glass-frosted rounded-2xl shadow-lg">
+          <ul className="grid grid-cols-3 divide-x divide-white/10 dark:divide-gray-700/20">
+            {navItems.slice(0, 3).map((item) => (
+              <li key={item.to}>
+                <NavLink
+                  to={item.to}
+                  className={({ isActive }) =>
+                    `flex items-center justify-center gap-2 py-3 ${
+                      isActive || location.pathname === item.to
+                        ? 'text-primary-600 dark:text-primary-400'
+                        : 'text-gray-700 dark:text-gray-300'
+                    }`
+                  }
+                >
+                  <item.icon className="w-5 h-5" />
+                  <span className="sr-only">{item.name}</span>
+                </NavLink>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </nav>
     </div>
   )
 }
