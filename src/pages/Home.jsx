@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import { Bot, Zap, Shield, Gauge, ArrowRight, CheckCircle } from 'lucide-react'
+import { Bot, Zap, Shield, Gauge, ArrowRight, CheckCircle, MessageCircle, ThumbsUp, Share, AlertTriangle, CheckCircle2, User } from 'lucide-react'
 
 export function Home() {
   const features = [
@@ -85,25 +85,118 @@ export function Home() {
             >
               <div className="glass-liquid rounded-2xl p-8 relative">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary-400/20 to-purple-400/20 rounded-2xl" />
-                <div className="relative">
-                  <Bot className="w-24 h-24 text-primary-600 mx-auto mb-6" />
-                  <div className="space-y-4">
-                    {[1, 2, 3].map((i) => (
-                      <motion.div
-                        key={i}
-                        initial={{ width: 0 }}
-                        animate={{ width: '100%' }}
-                        transition={{ delay: 0.5 + i * 0.2, duration: 0.8 }}
-                        className="h-3 bg-gradient-to-r from-primary-200 to-purple-200 rounded-full overflow-hidden"
-                      >
-                        <motion.div
-                          initial={{ x: '-100%' }}
-                          animate={{ x: '0%' }}
-                          transition={{ delay: 1 + i * 0.2, duration: 1 }}
-                          className="h-full bg-gradient-to-r from-primary-500 to-purple-500 rounded-full"
-                        />
-                      </motion.div>
-                    ))}
+                <div className="relative space-y-5" aria-label="Live social thread preview">
+                  {/* Post header */}
+                  <div className="flex items-start space-x-3">
+                    <div className="w-10 h-10 rounded-full bg-primary-500 flex items-center justify-center text-white font-semibold" aria-hidden>
+                      JM
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2">
+                        <span className="font-semibold text-gray-900 dark:text-white">Jordan Miles</span>
+                        <CheckCircle2 className="w-4 h-4 text-primary-500" aria-hidden />
+                        <span className="text-xs text-gray-500 dark:text-gray-400">2m</span>
+                      </div>
+                      <p className="mt-1 text-gray-700 dark:text-gray-300">
+                        Just launched our new customer support bot — already resolving tickets in seconds! #AI #automation
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Post actions */}
+                  <div className="flex items-center space-x-6 text-gray-600 dark:text-gray-400">
+                    <button className="flex items-center space-x-1 hover:text-primary-600 dark:hover:text-primary-400 transition-colors ring-focus rounded" aria-label="Like">
+                      <ThumbsUp className="w-4 h-4" />
+                      <span className="text-sm">128</span>
+                    </button>
+                    <button className="flex items-center space-x-1 hover:text-primary-600 dark:hover:text-primary-400 transition-colors ring-focus rounded" aria-label="Comment">
+                      <MessageCircle className="w-4 h-4" />
+                      <span className="text-sm">34</span>
+                    </button>
+                    <button className="flex items-center space-x-1 hover:text-primary-600 dark:hover:text-primary-400 transition-colors ring-focus rounded" aria-label="Share">
+                      <Share className="w-4 h-4" />
+                      <span className="text-sm">12</span>
+                    </button>
+                  </div>
+
+                  {/* Comments */}
+                  <div className="space-y-4" role="list" aria-label="Comments">
+                    {/* Genuine comment */}
+                    <motion.div
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.4 }}
+                      className="flex items-start space-x-3"
+                      role="listitem"
+                    >
+                      <div className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-700 dark:text-gray-200 text-sm font-semibold" aria-hidden>
+                        MP
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm font-medium text-gray-900 dark:text-white">Maya Patel</span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">1m</span>
+                        </div>
+                        <div className="mt-1 p-3 rounded-lg bg-white/70 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700">
+                          <p className="text-sm text-gray-700 dark:text-gray-300">This is awesome! Our response time dropped by 60% after enabling it.</p>
+                        </div>
+                      </div>
+                    </motion.div>
+
+                    {/* Bot comment (caught) */}
+                    <motion.div
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.4, delay: 0.1 }}
+                      className="flex items-start space-x-3"
+                      role="listitem"
+                    >
+                      <div className="w-9 h-9 rounded-full bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 flex items-center justify-center text-sm font-semibold" aria-hidden>
+                        AD
+                      </div>
+                      <div className="flex-1 relative">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm font-medium text-gray-900 dark:text-white">AutoDeals 24/7</span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">Just now</span>
+                        </div>
+                        <div className="mt-1 p-3 rounded-lg border border-red-300 dark:border-red-800 bg-red-50/60 dark:bg-red-900/10 relative">
+                          <div className="absolute -top-3 right-2">
+                            <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 text-xs font-medium">
+                              <AlertTriangle className="w-3.5 h-3.5" aria-hidden />
+                              <span>Bot detected</span>
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-700 dark:text-gray-300">
+                            Get 10k followers instantly — no password needed! Click here: bit.ly/zz-boost
+                          </p>
+                          <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
+                            Auto-moderated by BotSpot
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+
+                    {/* Genuine comment 2 */}
+                    <motion.div
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.4, delay: 0.2 }}
+                      className="flex items-start space-x-3"
+                      role="listitem"
+                    >
+                      <div className="w-9 h-9 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 flex items-center justify-center text-sm font-semibold" aria-hidden>
+                        LC
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm font-medium text-gray-900 dark:text-white">Leo Chang</span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">Just now</span>
+                        </div>
+                        <div className="mt-1 p-3 rounded-lg bg-white/70 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700">
+                          <p className="text-sm text-gray-700 dark:text-gray-300">Love seeing the bot catch spam in real time 👏</p>
+                        </div>
+                      </div>
+                    </motion.div>
                   </div>
                 </div>
               </div>
