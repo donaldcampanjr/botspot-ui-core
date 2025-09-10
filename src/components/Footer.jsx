@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { Link } from 'react-router-dom'
 import { Bot, Github, Twitter, Linkedin, Mail } from 'lucide-react'
 
 export function Footer() {
@@ -42,12 +43,14 @@ export function Footer() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="flex items-center space-x-2 mb-4"
+              className="mb-4"
             >
-              <Bot className="w-8 h-8 text-primary-600" />
-              <span className="text-xl font-bold text-gray-900 dark:text-white">
-                BotSpot
-              </span>
+              <Link to="/" className="flex items-center space-x-2 ring-focus rounded-lg p-1 w-fit">
+                <Bot className="w-8 h-8 text-primary-600" />
+                <span className="text-xl font-bold text-gray-900 dark:text-white">
+                  BotSpot
+                </span>
+              </Link>
             </motion.div>
             <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md">
               The ultimate platform for AI-powered automation and bot management. 
