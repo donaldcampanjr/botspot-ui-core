@@ -20,7 +20,6 @@ export function AuthForm({ mode = 'login' }) {
 
   const onSubmit = async (e) => {
     e.preventDefault()
-    setError('')
     setLoading(true)
 
     const base = import.meta.env.VITE_API_BASE
@@ -30,15 +29,21 @@ export function AuthForm({ mode = 'login' }) {
       // basic client validation
       const emailOk = /.+@.+\..+/.test(email)
       if (!emailOk) {
-        setError('Please enter a valid email address')
+        error('Please enter a valid email address')
         setLoading(false)
         return
       }
       if (password.length < 6) {
-        setError('Password must be at least 6 characters')
+        error('Password must be at least 6 characters')
         setLoading(false)
         return
       }
+
+      // Show loading toast
+      const loadingToast = info(
+        mode === 'register' ? 'Creating your account...' : 'Signing you in...',
+        { autoHide: false, title: 'Please wait' }
+      )
 
       const res = await fetch(endpoint, {
         method: 'POST',
@@ -58,15 +63,25 @@ export function AuthForm({ mode = 'login' }) {
           errorMsg = 'Password is too weak. Please use a stronger password.'
         } else if (errorMsg.includes('signup_disabled')) {
           errorMsg = 'Registration is currently disabled.'
+        } else if (errorMsg.includes('Invalid login credentials')) {
+          errorMsg = 'Invalid email or password. Please check your credentials.'
+        } else if (errorMsg.includes('email_not_confirmed')) {
+          errorMsg = 'Please check your email and confirm your account before signing in.'
         }
 
-        setError(errorMsg)
+        error(errorMsg)
       } else {
+        // Success!
+        const actionText = mode === 'register' ? 'Account created successfully!' : 'Welcome back!'
+        success(actionText, {
+          title: mode === 'register' ? 'Registration Complete' : 'Sign In Successful'
+        })
+
         const to = location.state?.from?.pathname || '/dashboard'
         navigate(to, { replace: true })
       }
     } catch (err) {
-      setError('Network error. Please try again.')
+      error('Network error. Please check your connection and try again.')
     } finally {
       setLoading(false)
     }
