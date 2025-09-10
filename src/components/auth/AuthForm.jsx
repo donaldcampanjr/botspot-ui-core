@@ -24,6 +24,7 @@ export function AuthForm({ mode = 'login' }) {
 
     const base = import.meta.env.VITE_API_BASE
     const endpoint = mode === 'register' ? `${base}/auth/register` : `${base}/auth/login`
+    let loadingToast = null
 
     try {
       // basic client validation
@@ -40,10 +41,13 @@ export function AuthForm({ mode = 'login' }) {
       }
 
       // Show loading toast
-      const loadingToast = info(
+      loadingToast = info(
         mode === 'register' ? 'Creating your account...' : 'Signing you in...',
         { autoHide: false, title: 'Please wait' }
       )
+
+      console.log('Making request to:', endpoint)
+      console.log('Request data:', { email, password: '***' })
 
       const res = await fetch(endpoint, {
         method: 'POST',
@@ -52,8 +56,11 @@ export function AuthForm({ mode = 'login' }) {
         body: JSON.stringify({ email, password }),
       })
 
+      console.log('Response status:', res.status)
+
       if (!res.ok) {
         const data = await res.json().catch(() => ({ error: 'Authentication failed' }))
+        console.log('Error response data:', data)
         let errorMsg = data.error || data.message || 'Authentication failed'
 
         // Handle specific Supabase error codes
@@ -69,10 +76,14 @@ export function AuthForm({ mode = 'login' }) {
           errorMsg = 'Please check your email and confirm your account before signing in.'
         }
 
+        if (loadingToast) removeToast(loadingToast)
         error(errorMsg)
       } else {
         // Success! Remove loading toast and show success
-        removeToast(loadingToast)
+        const responseData = await res.json().catch(() => ({}))
+        console.log('Success response data:', responseData)
+
+        if (loadingToast) removeToast(loadingToast)
         const actionText = mode === 'register' ? 'Account created successfully!' : 'Welcome back!'
         success(actionText, {
           title: mode === 'register' ? 'Registration Complete' : 'Sign In Successful'
@@ -82,10 +93,10 @@ export function AuthForm({ mode = 'login' }) {
         navigate(to, { replace: true })
       }
     } catch (err) {
+      console.error('Request error:', err)
+      if (loadingToast) removeToast(loadingToast)
       error('Network error. Please check your connection and try again.')
     } finally {
-      // Always remove loading toast when done
-      if (loadingToast) removeToast(loadingToast)
       setLoading(false)
     }
   }
