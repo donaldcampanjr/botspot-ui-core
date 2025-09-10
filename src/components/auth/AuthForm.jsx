@@ -9,7 +9,7 @@ import { useToast } from '../../contexts/ToastContext'
 export function AuthForm({ mode = 'login' }) {
   const navigate = useNavigate()
   const location = useLocation()
-  const { success, error, info } = useToast()
+  const { success, error, info, removeToast } = useToast()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -71,7 +71,8 @@ export function AuthForm({ mode = 'login' }) {
 
         error(errorMsg)
       } else {
-        // Success!
+        // Success! Remove loading toast and show success
+        removeToast(loadingToast)
         const actionText = mode === 'register' ? 'Account created successfully!' : 'Welcome back!'
         success(actionText, {
           title: mode === 'register' ? 'Registration Complete' : 'Sign In Successful'
@@ -83,6 +84,8 @@ export function AuthForm({ mode = 'login' }) {
     } catch (err) {
       error('Network error. Please check your connection and try again.')
     } finally {
+      // Always remove loading toast when done
+      if (loadingToast) removeToast(loadingToast)
       setLoading(false)
     }
   }
