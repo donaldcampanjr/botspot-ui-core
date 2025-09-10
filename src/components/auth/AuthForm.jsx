@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { motion, useReducedMotion } from 'framer-motion'
 import { Eye, EyeOff } from 'lucide-react'
 import { validateEnvVars } from '../../utils'
+import { PasswordStrength } from './PasswordStrength'
 
 export function AuthForm({ mode = 'login' }) {
   const navigate = useNavigate()
