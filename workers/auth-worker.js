@@ -89,7 +89,11 @@ export default {
         })
       }
 
-      const res = await supabaseFetch('/auth/v1/signup', 'POST', { email, password })
+      const res = await supabaseFetch('/auth/v1/signup', 'POST', {
+        email,
+        password,
+        email_confirm: !env.RESEND_API_KEY // Auto-confirm email if no email service configured
+      })
       const data = await res.json().catch(() => ({}))
 
       if (!res.ok) {
