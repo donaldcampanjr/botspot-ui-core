@@ -10,6 +10,7 @@ import { Features } from '../pages/Features'
 import { About } from '../pages/About'
 import { Pricing } from '../pages/Pricing'
 import { Contact } from '../pages/Contact'
+import { ComingSoon } from '../pages/ComingSoon'
 import Login from '../pages/auth/Login'
 import Register from '../pages/auth/Register'
 
@@ -47,6 +48,22 @@ export const router = createBrowserRouter([
       {
         path: 'contact',
         element: <Contact />,
+      },
+      {
+        path: 'docs',
+        element: <ComingSoon title="Documentation" description="Comprehensive guides and API documentation coming soon." />,
+      },
+      {
+        path: 'api',
+        element: <ComingSoon title="API Console" description="Interactive API testing and documentation coming soon." />,
+      },
+      {
+        path: 'blog',
+        element: <ComingSoon title="Blog" description="Latest news, updates, and automation insights coming soon." />,
+      },
+      {
+        path: 'careers',
+        element: <ComingSoon title="Careers" description="Join our team! Career opportunities will be posted here soon." />,
       },
       {
         path: 'auth/login',
