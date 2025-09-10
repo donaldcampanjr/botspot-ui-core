@@ -24,6 +24,19 @@ export function AuthForm({ mode = 'login' }) {
     const endpoint = mode === 'register' ? `${base}/auth/register` : `${base}/auth/login`
 
     try {
+      // basic client validation
+      const emailOk = /.+@.+\..+/.test(email)
+      if (!emailOk) {
+        setError('Please enter a valid email address')
+        setLoading(false)
+        return
+      }
+      if (password.length < 8) {
+        setError('Password must be at least 8 characters')
+        setLoading(false)
+        return
+      }
+
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -35,7 +48,8 @@ export function AuthForm({ mode = 'login' }) {
         const data = await res.json().catch(() => ({ error: 'Authentication failed' }))
         setError(data.error || data.message || 'Authentication failed')
       } else {
-        navigate('/dashboard', { replace: true })
+        const to = location.state?.from?.pathname || '/dashboard'
+        navigate(to, { replace: true })
       }
     } catch (err) {
       setError('Network error. Please try again.')
