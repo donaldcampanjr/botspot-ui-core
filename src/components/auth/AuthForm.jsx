@@ -144,11 +144,6 @@ export function AuthForm({ mode = 'login' }) {
           <PasswordStrength value={password} />
         </div>
 
-        {error && (
-          <div role="alert" className="text-sm text-red-600 dark:text-red-400">
-            {error}
-          </div>
-        )}
 
         <motion.button
           type="submit"
