@@ -234,6 +234,43 @@ export default {
       })
     }
 
+    // RESEND VERIFICATION (optional)
+    if (pathname === '/api/auth/resend-verification' && request.method === 'POST') {
+      if (isRateLimited('resend')) {
+        return new Response(JSON.stringify({ error: 'Too many requests' }), {
+          status: 429,
+          headers: withHeaders({ 'Content-Type': 'application/json' }),
+        })
+      }
+      const { email } = await parseBody(request)
+      if (!email) {
+        return new Response(JSON.stringify({ error: 'Email required' }), {
+          status: 400,
+          headers: withHeaders({ 'Content-Type': 'application/json' }),
+        })
+      }
+      try {
+        if (env.RESEND_API_KEY && env.RESEND_FROM) {
+          await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${env.RESEND_API_KEY}`,
+            },
+            body: JSON.stringify({
+              from: env.RESEND_FROM,
+              to: email,
+              subject: 'Verify your BotSpot email',
+              html: `<p>Hi ${email}, if your account requires verification, please check your inbox for the confirmation link. If you didn't request this, ignore this email.</p>`,
+            }),
+          })
+        }
+      } catch {}
+      return new Response(JSON.stringify({ success: true }), {
+        headers: withHeaders({ 'Content-Type': 'application/json' }),
+      })
+    }
+
     // ME
     if (pathname === '/api/auth/me') {
       const cookie = request.headers.get('Cookie') || ''
