@@ -38,6 +38,11 @@ export function Home() {
 
   return (
     <div className="min-h-screen">
+      {/* Test Toast Notifications - Remove after testing */}
+      <div className="fixed top-20 left-4 z-50">
+        <TestToasts />
+      </div>
+
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-primary-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900/20">
         <div className="container-app py-20 lg:py-32">
