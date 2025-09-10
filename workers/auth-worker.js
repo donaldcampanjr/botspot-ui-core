@@ -78,6 +78,22 @@ export default {
         })
       }
 
+      // Assign default role in DB (service role bypasses RLS)
+      try {
+        if (env.SUPABASE_SERVICE_ROLE_KEY && data?.user?.id) {
+          await fetch(`${env.SUPABASE_URL}/rest/v1/user_roles`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+              Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+              Prefer: 'return=minimal',
+            },
+            body: JSON.stringify({ user_id: data.user.id, role: 'Daily User' }),
+          })
+        }
+      } catch {}
+
       // Auto-login after successful signup
       const loginRes = await supabaseFetch('/auth/v1/token?grant_type=password', 'POST', { email, password })
       const loginData = await loginRes.json().catch(() => ({}))
