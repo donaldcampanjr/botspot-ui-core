@@ -89,8 +89,11 @@ export function AuthForm({ mode = 'login' }) {
           title: mode === 'register' ? 'Registration Complete' : 'Sign In Successful'
         })
 
-        const to = location.state?.from?.pathname || '/dashboard'
-        navigate(to, { replace: true })
+        // Wait a moment for cookie to be set before navigating
+        setTimeout(() => {
+          const to = location.state?.from?.pathname || '/dashboard'
+          navigate(to, { replace: true })
+        }, 100)
       }
     } catch (err) {
       console.error('Request error:', err)
