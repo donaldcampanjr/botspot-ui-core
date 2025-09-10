@@ -6,7 +6,7 @@ export default {
     const corsHeaders = {
       'Access-Control-Allow-Origin': env.APP_BASE_URL,
       'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, apikey',
       'Access-Control-Allow-Credentials': 'true',
     }
 
@@ -105,7 +105,7 @@ export default {
         return new Response(JSON.stringify({ success: true }), {
           headers: withHeaders({
             'Content-Type': 'application/json',
-            'Set-Cookie': `sb:token=${loginData.access_token}; HttpOnly; Path=/; Secure; SameSite=Lax`,
+            'Set-Cookie': `sb:token=${loginData.access_token}; HttpOnly; Path=/; SameSite=Lax${env.APP_BASE_URL && env.APP_BASE_URL.startsWith('https') ? '; Secure' : ''}`,
           }),
         })
       }
@@ -149,7 +149,7 @@ export default {
       return new Response(JSON.stringify({ success: true }), {
         headers: withHeaders({
           'Content-Type': 'application/json',
-          'Set-Cookie': 'sb:token=; HttpOnly; Path=/; Secure; SameSite=Lax; Max-Age=0',
+          'Set-Cookie': `sb:token=; HttpOnly; Path=/; SameSite=Lax${env.APP_BASE_URL && env.APP_BASE_URL.startsWith('https') ? '; Secure' : ''}; Max-Age=0`,
         }),
       })
     }
