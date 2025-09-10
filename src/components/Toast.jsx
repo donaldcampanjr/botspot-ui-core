@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react'
 import { clsx } from 'clsx'
+import { forwardRef } from 'react'
 
 const icons = {
   success: CheckCircle,
@@ -16,11 +17,12 @@ const styles = {
   info: 'bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-200',
 }
 
-export function Toast({ id, type = 'info', title, message, onDismiss, autoHide = true }) {
+export const Toast = forwardRef(function Toast({ id, type = 'info', title, message, onDismiss, autoHide = true }, ref) {
   const Icon = icons[type]
 
   return (
     <motion.div
+      ref={ref}
       layout
       initial={{ opacity: 0, y: 50, scale: 0.3 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -63,7 +65,7 @@ export function Toast({ id, type = 'info', title, message, onDismiss, autoHide =
       </button>
     </motion.div>
   )
-}
+})
 
 export function ToastContainer({ toasts, onDismiss }) {
   return (
