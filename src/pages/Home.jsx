@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import { Bot, Zap, Shield, Gauge, ArrowRight, CheckCircle, MessageCircle, ThumbsUp, Share, AlertTriangle, CheckCircle2, User } from 'lucide-react'
+import { Bot, Zap, Shield, Gauge, ArrowRight, CheckCircle, MessageCircle, ThumbsUp, Share, AlertTriangle, CheckCircle2 } from 'lucide-react'
 
 export function Home() {
   const features = [
