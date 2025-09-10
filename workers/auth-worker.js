@@ -271,13 +271,47 @@ export default {
       })
     }
 
+    // VERIFY EMAIL (proxy to Supabase)
+    if (pathname.startsWith('/api/auth/verify-email')) {
+      const params = new URL(request.url).searchParams
+      const token = params.get('token') || params.get('token_hash')
+      if (!token) {
+        return new Response(JSON.stringify({ error: 'Missing token' }), {
+          status: 400,
+          headers: withHeaders({ 'Content-Type': 'application/json' }),
+        })
+      }
+      // Try both variants for compatibility
+      let ok = false
+      try {
+        const r1 = await fetch(`${env.SUPABASE_URL}/auth/v1/verify?type=signup&token_hash=${encodeURIComponent(token)}`, {
+          headers: { apikey: env.SUPABASE_ANON_KEY },
+        })
+        ok = r1.ok
+      } catch {}
+      if (!ok) {
+        try {
+          const r2 = await fetch(`${env.SUPABASE_URL}/auth/v1/verify`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', apikey: env.SUPABASE_ANON_KEY },
+            body: JSON.stringify({ type: 'signup', token }),
+          })
+          ok = r2.ok
+        } catch {}
+      }
+      return new Response(JSON.stringify({ success: ok }), {
+        status: ok ? 200 : 400,
+        headers: withHeaders({ 'Content-Type': 'application/json' }),
+      })
+    }
+
     // ME
     if (pathname === '/api/auth/me') {
       const cookie = request.headers.get('Cookie') || ''
       const token = cookie.split('sb:token=')[1]?.split(';')[0]
 
       if (!token) {
-        return new Response(JSON.stringify({ error: 'Not authenticated' }), {
+        return new Response(JSON.stringify({ loggedIn: false }), {
           status: 401,
           headers: withHeaders({ 'Content-Type': 'application/json' }),
         })
@@ -305,7 +339,7 @@ export default {
           data.role = role
         }
       } catch {}
-      return new Response(JSON.stringify(data), {
+      return new Response(JSON.stringify({ loggedIn: res.ok, user: data }), {
         status: res.status,
         headers: withHeaders({ 'Content-Type': 'application/json' }),
       })
