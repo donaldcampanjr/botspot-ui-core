@@ -148,6 +148,12 @@ export default {
 
     // LOGIN
     if (pathname === '/api/auth/login' && request.method === 'POST') {
+      if (isRateLimited('login')) {
+        return new Response(JSON.stringify({ error: 'Too many requests' }), {
+          status: 429,
+          headers: withHeaders({ 'Content-Type': 'application/json' }),
+        })
+      }
       const { email, password } = await parseBody(request)
       if (!email || !password) {
         return new Response(JSON.stringify({ error: 'Email and password required' }), {
