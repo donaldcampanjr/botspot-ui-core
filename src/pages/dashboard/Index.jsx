@@ -43,6 +43,12 @@ export default function DashboardIndex() {
 
   return (
     <div className="space-y-6">
+      {user?.email_confirmed_at == null && (
+        <div className="glass-frosted rounded-2xl p-4 text-sm text-amber-800 dark:text-amber-200">
+          Your email isn’t verified yet. Check your inbox or use “Resend verification” on the login page.
+        </div>
+      )}
+
       <motion.section
         initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 10 }}
         animate={{ opacity: 1, y: 0 }}
