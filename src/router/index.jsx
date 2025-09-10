@@ -8,6 +8,8 @@ import DashboardIndex from '../pages/dashboard/Index'
 import { Home } from '../pages/Home'
 import { Features } from '../pages/Features'
 import { About } from '../pages/About'
+import { Pricing } from '../pages/Pricing'
+import { Contact } from '../pages/Contact'
 import Login from '../pages/auth/Login'
 import Register from '../pages/auth/Register'
 
@@ -37,6 +39,14 @@ export const router = createBrowserRouter([
       {
         path: 'about',
         element: <About />,
+      },
+      {
+        path: 'pricing',
+        element: <Pricing />,
+      },
+      {
+        path: 'contact',
+        element: <Contact />,
       },
       {
         path: 'auth/login',
