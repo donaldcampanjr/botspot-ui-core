@@ -15,6 +15,7 @@ import Register from '../pages/auth/Register'
 import { AdminDashboard } from '../pages/dashboard/AdminDashboard'
 import { ManagerDashboard } from '../pages/dashboard/ManagerDashboard'
 import { DeveloperDashboard } from '../pages/dashboard/DeveloperDashboard'
+import { AdminRoute } from '../components/auth/AdminRoute'
 
 // Error pages
 import { NotFound } from '../pages/NotFound'
@@ -60,7 +61,11 @@ export const router = createBrowserRouter([
   },
   {
     path: '/admin',
-    element: <DashboardLayout userRole="Admin" />,
+    element: (
+      <AdminRoute>
+        <DashboardLayout />
+      </AdminRoute>
+    ),
     children: [
       {
         index: true,
@@ -78,7 +83,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/manager',
-    element: <DashboardLayout userRole="Manager" />,
+    element: <DashboardLayout />,
     children: [
       {
         index: true,
@@ -92,7 +97,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/developer',
-    element: <DashboardLayout userRole="Developer" />,
+    element: <DashboardLayout />,
     children: [
       {
         index: true,
