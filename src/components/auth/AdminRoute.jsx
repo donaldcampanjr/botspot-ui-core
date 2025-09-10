@@ -17,6 +17,8 @@ export function AdminRoute({ children }) {
         const role = data?.user?.role || data?.user?.user_metadata?.role
         if (res.ok && data?.loggedIn && String(role).toLowerCase() === 'admin') {
           setOk(true)
+        } else if (res.ok && data?.loggedIn) {
+          navigate('/dashboard', { replace: true })
         } else {
           navigate('/auth/login', { replace: true, state: { from: location } })
         }
