@@ -15,6 +15,21 @@ export default {
     }
 
     // Helpers
+    const RATE = { windowMs: 5 * 60 * 1000, max: 10 }
+    const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('x-forwarded-for') || 'anon'
+    // @ts-ignore - global scope persistence within instance
+    self.__ipHits = self.__ipHits || new Map()
+    function isRateLimited(bucket) {
+      const key = `${ip}:${bucket}`
+      const now = Date.now()
+      const arr = self.__ipHits.get(key) || []
+      const fresh = arr.filter((t) => now - t < RATE.windowMs)
+      if (fresh.length >= RATE.max) return true
+      fresh.push(now)
+      self.__ipHits.set(key, fresh)
+      return false
+    }
+
     async function parseBody(req) {
       try { return await req.json() } catch { return {} }
     }
