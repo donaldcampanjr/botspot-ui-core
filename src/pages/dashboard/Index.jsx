@@ -19,7 +19,8 @@ export default function DashboardIndex() {
           return
         }
         const data = await res.json()
-        setUser(data)
+        const u = data?.user ?? data
+        setUser(u)
       } catch {
         navigate('/auth/login', { replace: true })
       } finally {
