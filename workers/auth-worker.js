@@ -234,10 +234,10 @@ export default {
       const data = await res.json().catch(() => ({}))
 
       if (res.ok && data?.access_token) {
-        return new Response(JSON.stringify({ success: true }), {
+        return new Response(JSON.stringify({ success: true, user: data.user }), {
           headers: withHeaders({
             'Content-Type': 'application/json',
-            'Set-Cookie': `sb:token=${data.access_token}; HttpOnly; Path=/; Secure; SameSite=Lax`,
+            'Set-Cookie': `sb:token=${data.access_token}; HttpOnly; Path=/; SameSite=Lax${env.APP_BASE_URL && env.APP_BASE_URL.startsWith('https') ? '; Secure' : ''}`,
           }),
         })
       }
