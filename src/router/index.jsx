@@ -1,6 +1,8 @@
 import { createBrowserRouter } from 'react-router-dom'
 import { MainLayout } from '../layouts/MainLayout'
 import { DashboardLayout } from '../layouts/DashboardLayout'
+import { ProtectedRoute } from '../components/auth/ProtectedRoute'
+import DashboardIndex from '../pages/dashboard/Index'
 
 // Pages
 import { Home } from '../pages/Home'
@@ -39,24 +41,13 @@ export const router = createBrowserRouter([
   },
   {
     path: '/dashboard',
-    element: <DashboardLayout userRole="Daily User" />,
+    element: (
+      <ProtectedRoute>
+        <DashboardLayout />
+      </ProtectedRoute>
+    ),
     children: [
-      {
-        index: true,
-        element: <DashboardOverview />,
-      },
-      {
-        path: 'analytics',
-        element: <DashboardOverview />, // Will be replaced with actual analytics
-      },
-      {
-        path: 'bots',
-        element: <DashboardOverview />, // Will be replaced with bot management
-      },
-      {
-        path: 'settings',
-        element: <DashboardOverview />, // Will be replaced with settings
-      },
+      { index: true, element: <DashboardIndex /> },
     ],
   },
   {
