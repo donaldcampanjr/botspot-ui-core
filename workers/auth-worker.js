@@ -218,6 +218,20 @@ export default {
       })
 
       const data = await res.json().catch(() => ({}))
+      try {
+        if (env.SUPABASE_SERVICE_ROLE_KEY && data?.id) {
+          const r = await fetch(`${env.SUPABASE_URL}/rest/v1/user_roles?user_id=eq.${data.id}&select=role`, {
+            headers: {
+              apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+              Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+            },
+          })
+          const roles = await r.json().catch(() => [])
+          const role = roles?.[0]?.role || 'Daily User'
+          data.user_metadata = { ...(data.user_metadata || {}), role }
+          data.role = role
+        }
+      } catch {}
       return new Response(JSON.stringify(data), {
         status: res.status,
         headers: withHeaders({ 'Content-Type': 'application/json' }),
