@@ -93,16 +93,33 @@ export default {
       const data = await res.json().catch(() => ({}))
 
       if (!res.ok) {
-        return new Response(JSON.stringify({ error: data?.msg || data?.error_description || 'Registration failed' }), {
+        const errorMsg = data?.msg || data?.error_description || 'Registration failed'
+        return new Response(JSON.stringify({
+          error: errorMsg,
+          debug: {
+            status: res.status,
+            response: data,
+            timestamp: new Date().toISOString()
+          }
+        }), {
           status: res.status,
           headers: withHeaders({ 'Content-Type': 'application/json' }),
         })
       }
 
+      // Ensure we have user data from Supabase response
+      let user = data?.user || null
+      const debugInfo = {
+        roleEnrichmentAttempts: [],
+        emailSent: false,
+        autoLogin: false
+      }
+
       // Assign default role in DB (service role bypasses RLS)
-      try {
-        if (env.SUPABASE_SERVICE_ROLE_KEY && data?.user?.id) {
-          await fetch(`${env.SUPABASE_URL}/rest/v1/user_roles`, {
+      // If this fails, log but do not block user creation
+      if (env.SUPABASE_SERVICE_ROLE_KEY && user?.id) {
+        try {
+          const roleRes = await fetch(`${env.SUPABASE_URL}/rest/v1/user_roles`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -110,29 +127,75 @@ export default {
               Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
               Prefer: 'return=minimal',
             },
-            body: JSON.stringify({ user_id: data.user.id, role: 'Daily User' }),
+            body: JSON.stringify({ user_id: user.id, role: 'Daily User' }),
           })
-          await fetch(`${env.SUPABASE_URL}/auth/v1/admin/users/${data.user.id}`, {
+          debugInfo.roleEnrichmentAttempts.push({
+            type: 'role_table_insert',
+            success: roleRes.ok,
+            status: roleRes.status
+          })
+        } catch (error) {
+          debugInfo.roleEnrichmentAttempts.push({
+            type: 'role_table_insert',
+            success: false,
+            error: error.message || 'Unknown error'
+          })
+        }
+
+        try {
+          const metadataRes = await fetch(`${env.SUPABASE_URL}/auth/v1/admin/users/${user.id}`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
               apikey: env.SUPABASE_SERVICE_ROLE_KEY,
               Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
             },
-            body: JSON.stringify({ user_metadata: { ...(data.user.user_metadata || {}), role: 'Daily User' } }),
+            body: JSON.stringify({ user_metadata: { ...(user.user_metadata || {}), role: 'Daily User' } }),
+          })
+          debugInfo.roleEnrichmentAttempts.push({
+            type: 'user_metadata_update',
+            success: metadataRes.ok,
+            status: metadataRes.status
+          })
+
+          // Update user object with role for consistent response
+          if (metadataRes.ok) {
+            user.user_metadata = { ...(user.user_metadata || {}), role: 'Daily User' }
+            user.role = 'Daily User'
+          }
+        } catch (error) {
+          debugInfo.roleEnrichmentAttempts.push({
+            type: 'user_metadata_update',
+            success: false,
+            error: error.message || 'Unknown error'
           })
         }
-      } catch {}
+      } else {
+        debugInfo.roleEnrichmentAttempts.push({
+          type: 'skipped',
+          reason: !env.SUPABASE_SERVICE_ROLE_KEY ? 'No service role key' : 'No user ID'
+        })
+      }
 
       // Auto-login after successful signup
       const loginRes = await supabaseFetch('/auth/v1/token?grant_type=password', 'POST', { email, password })
       const loginData = await loginRes.json().catch(() => ({}))
 
-      // Fire-and-forget welcome email
-      await sendWelcomeEmail(email)
+      // Fire-and-forget welcome email (works even without RESEND_API_KEY)
+      try {
+        await sendWelcomeEmail(email)
+        debugInfo.emailSent = !!env.RESEND_API_KEY
+      } catch (error) {
+        debugInfo.emailSent = false
+      }
 
       if (loginRes.ok && loginData?.access_token) {
-        return new Response(JSON.stringify({ success: true }), {
+        debugInfo.autoLogin = true
+        return new Response(JSON.stringify({
+          success: true,
+          user,
+          debug: debugInfo
+        }), {
           headers: withHeaders({
             'Content-Type': 'application/json',
             'Set-Cookie': `sb:token=${loginData.access_token}; HttpOnly; Path=/; SameSite=Lax${env.APP_BASE_URL && env.APP_BASE_URL.startsWith('https') ? '; Secure' : ''}`,
@@ -140,8 +203,13 @@ export default {
         })
       }
 
-      // If cannot auto-login, still return success
-      return new Response(JSON.stringify({ success: true }), {
+      // If cannot auto-login, still return success with user data
+      debugInfo.autoLogin = false
+      return new Response(JSON.stringify({
+        success: true,
+        user,
+        debug: debugInfo
+      }), {
         headers: withHeaders({ 'Content-Type': 'application/json' }),
       })
     }
