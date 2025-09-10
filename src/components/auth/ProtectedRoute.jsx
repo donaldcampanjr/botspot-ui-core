@@ -19,12 +19,15 @@ export function ProtectedRoute({ children }) {
           credentials: 'include',
         })
         const data = await res.json().catch(() => ({}))
+        console.log('Auth verify response:', { ok: res.ok, data })
         if (res.ok && data && data.loggedIn) {
           setAuthorized(true)
         } else {
+          console.log('Auth failed, redirecting to login')
           navigate('/auth/login', { replace: true, state: { from: location } })
         }
       } catch (e) {
+        console.log('Auth error:', e)
         navigate('/auth/login', { replace: true, state: { from: location } })
       } finally {
         setLoading(false)
