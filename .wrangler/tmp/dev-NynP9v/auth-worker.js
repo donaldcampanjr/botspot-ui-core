@@ -244,7 +244,20 @@ var auth_worker_default = {
           })
         });
       }
-      return new Response(JSON.stringify({ error: data?.error_description || "Invalid credentials" }), {
+      let errorMsg = data?.error_description || "Invalid credentials";
+      if (errorMsg.includes("email_not_confirmed") || errorMsg.includes("Email not confirmed")) {
+        errorMsg = "Please check your email and confirm your account before signing in.";
+      } else if (errorMsg.includes("invalid_grant") || errorMsg.includes("Invalid login credentials")) {
+        errorMsg = "Invalid email or password. Please check your credentials.";
+      }
+      return new Response(JSON.stringify({
+        error: errorMsg,
+        debug: {
+          originalError: data?.error_description,
+          status: res.status,
+          timestamp: (/* @__PURE__ */ new Date()).toISOString()
+        }
+      }), {
         status: res.status,
         headers: withHeaders({ "Content-Type": "application/json" })
       });
