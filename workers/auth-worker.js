@@ -396,6 +396,105 @@ export default {
       })
     }
 
+    // UPDATE ROLE
+    if (pathname === '/api/auth/role' && request.method === 'PUT') {
+      const cookie = request.headers.get('Cookie') || ''
+      const token = cookie.split('sb:token=')[1]?.split(';')[0]
+
+      if (!token) {
+        return new Response(JSON.stringify({ error: 'Authentication required' }), {
+          status: 401,
+          headers: withHeaders({ 'Content-Type': 'application/json' }),
+        })
+      }
+
+      // Verify user is authenticated
+      const userRes = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
+        headers: {
+          apikey: env.SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (!userRes.ok) {
+        return new Response(JSON.stringify({ error: 'Invalid authentication' }), {
+          status: 401,
+          headers: withHeaders({ 'Content-Type': 'application/json' }),
+        })
+      }
+
+      const user = await userRes.json()
+      const { role } = await parseBody(request)
+
+      // Validate role
+      const validRoles = ['Influencer', 'Artist', 'Band', 'Business', 'Daily User']
+      if (!role || !validRoles.includes(role)) {
+        return new Response(JSON.stringify({
+          error: 'Invalid role. Must be one of: Influencer, Artist, Band, Business, Daily User'
+        }), {
+          status: 400,
+          headers: withHeaders({ 'Content-Type': 'application/json' }),
+        })
+      }
+
+      try {
+        // Update role in user_roles table
+        if (env.SUPABASE_SERVICE_ROLE_KEY) {
+          const roleUpdateRes = await fetch(`${env.SUPABASE_URL}/rest/v1/user_roles?user_id=eq.${user.id}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+              Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+              Prefer: 'return=minimal',
+            },
+            body: JSON.stringify({ role }),
+          })
+
+          if (!roleUpdateRes.ok) {
+            return new Response(JSON.stringify({ error: 'Failed to update role in database' }), {
+              status: 500,
+              headers: withHeaders({ 'Content-Type': 'application/json' }),
+            })
+          }
+
+          // Update user metadata for consistency
+          const metadataRes = await fetch(`${env.SUPABASE_URL}/auth/v1/admin/users/${user.id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+              Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+            },
+            body: JSON.stringify({
+              user_metadata: { ...(user.user_metadata || {}), role }
+            }),
+          })
+
+          return new Response(JSON.stringify({
+            success: true,
+            role,
+            metadata_updated: metadataRes.ok
+          }), {
+            headers: withHeaders({ 'Content-Type': 'application/json' }),
+          })
+        } else {
+          return new Response(JSON.stringify({ error: 'Service role key not configured' }), {
+            status: 500,
+            headers: withHeaders({ 'Content-Type': 'application/json' }),
+          })
+        }
+      } catch (error) {
+        return new Response(JSON.stringify({
+          error: 'Failed to update role',
+          detail: error.message
+        }), {
+          status: 500,
+          headers: withHeaders({ 'Content-Type': 'application/json' }),
+        })
+      }
+    }
+
     // Default 404
     return new Response(JSON.stringify({ error: 'Not Found' }), {
       status: 404,
