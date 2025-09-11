@@ -115,29 +115,11 @@ var auth_worker_default = {
         autoLogin: false
       };
       if (env.SUPABASE_SERVICE_ROLE_KEY && user?.id) {
-        try {
-          const roleRes = await fetch(`${env.SUPABASE_URL}/rest/v1/user_roles`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              apikey: env.SUPABASE_SERVICE_ROLE_KEY,
-              Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
-              Prefer: "return=minimal"
-            },
-            body: JSON.stringify({ user_id: user.id, role: "Daily User" })
-          });
-          debugInfo.roleEnrichmentAttempts.push({
-            type: "role_table_insert",
-            success: roleRes.ok,
-            status: roleRes.status
-          });
-        } catch (error) {
-          debugInfo.roleEnrichmentAttempts.push({
-            type: "role_table_insert",
-            success: false,
-            error: error.message || "Unknown error"
-          });
-        }
+        debugInfo.roleEnrichmentAttempts.push({
+          type: "role_table_insert",
+          success: true,
+          status: "skipped_trigger_handles_it"
+        });
         try {
           const metadataRes = await fetch(`${env.SUPABASE_URL}/auth/v1/admin/users/${user.id}`, {
             method: "PUT",
