@@ -225,7 +225,7 @@ var auth_worker_default = {
               }
             });
             const roles = await r.json().catch(() => []);
-            const role = roles?.[0]?.role || "Daily User";
+            const role = roles?.[0]?.role || null;
             user.user_metadata = { ...user.user_metadata || {}, role };
             user.role = role;
           }
