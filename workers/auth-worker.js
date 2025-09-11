@@ -125,34 +125,16 @@ export default {
           status: 'skipped_trigger_handles_it'
         })
 
-        try {
-          const metadataRes = await fetch(`${env.SUPABASE_URL}/auth/v1/admin/users/${user.id}`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              apikey: env.SUPABASE_SERVICE_ROLE_KEY,
-              Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
-            },
-            body: JSON.stringify({ user_metadata: { ...(user.user_metadata || {}), role: 'Daily User' } }),
-          })
-          debugInfo.roleEnrichmentAttempts.push({
-            type: 'user_metadata_update',
-            success: metadataRes.ok,
-            status: metadataRes.status
-          })
+        // Role will be set later during onboarding wizard
+        debugInfo.roleEnrichmentAttempts.push({
+          type: 'user_metadata_update',
+          success: true,
+          status: 'skipped_will_be_set_in_onboarding'
+        })
 
-          // Update user object with role for consistent response
-          if (metadataRes.ok) {
-            user.user_metadata = { ...(user.user_metadata || {}), role: 'Daily User' }
-            user.role = 'Daily User'
-          }
-        } catch (error) {
-          debugInfo.roleEnrichmentAttempts.push({
-            type: 'user_metadata_update',
-            success: false,
-            error: error.message || 'Unknown error'
-          })
-        }
+        // User starts with no role - will be assigned in onboarding
+        user.user_metadata = { ...(user.user_metadata || {}) }
+        user.role = null
       } else {
         debugInfo.roleEnrichmentAttempts.push({
           type: 'skipped',
