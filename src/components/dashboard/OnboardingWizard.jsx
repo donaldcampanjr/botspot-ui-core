@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
-import { CheckCircle, User, Mail, Link, Sparkles, X, ArrowRight, ArrowLeft } from 'lucide-react'
+import { CheckCircle, User, Users, Mail, Link, Sparkles, X, ArrowRight, ArrowLeft, Mic, Briefcase, Star, Heart } from 'lucide-react'
+import { validateEnvVars } from '../../utils'
 
 const WIZARD_STEPS = [
   {
@@ -8,6 +9,13 @@ const WIZARD_STEPS = [
     title: 'Complete your profile',
     description: 'Add your basic information to personalize your experience',
     icon: User,
+    completed: false
+  },
+  {
+    id: 'role',
+    title: 'Choose your role',
+    description: 'Select the role that best describes you',
+    icon: Users,
     completed: false
   },
   {
@@ -19,25 +27,60 @@ const WIZARD_STEPS = [
   },
   {
     id: 'connect',
-    title: 'Connect a social app',
-    description: 'Link your first social media account to get started',
+    title: 'Connect apps',
+    description: 'Link your social media accounts to get started',
     icon: Link,
     completed: false
+  }
+]
+
+const ROLE_OPTIONS = [
+  {
+    id: 'Influencer',
+    title: 'Influencer',
+    description: 'Build and engage your audience across social platforms',
+    icon: Star,
+    color: 'from-purple-500 to-pink-500'
   },
   {
-    id: 'explore',
-    title: 'Explore dashboard features',
-    description: 'Learn about the tools and features available to you',
-    icon: Sparkles,
-    completed: false
+    id: 'Artist',
+    title: 'Artist',
+    description: 'Showcase your creative work and connect with fans',
+    icon: Heart,
+    color: 'from-red-500 to-orange-500'
+  },
+  {
+    id: 'Band',
+    title: 'Band',
+    description: 'Promote your music and grow your fanbase',
+    icon: Mic,
+    color: 'from-blue-500 to-indigo-500'
+  },
+  {
+    id: 'Business',
+    title: 'Business',
+    description: 'Grow your brand and reach more customers',
+    icon: Briefcase,
+    color: 'from-green-500 to-teal-500'
+  },
+  {
+    id: 'Daily User',
+    title: 'Personal Use',
+    description: 'Manage your personal social media presence',
+    icon: User,
+    color: 'from-gray-500 to-gray-600'
   }
 ]
 
 export function OnboardingWizard({ user, onDismiss, onStepComplete }) {
   const [currentStep, setCurrentStep] = useState(0)
   const [steps, setSteps] = useState(WIZARD_STEPS)
+  const [selectedRole, setSelectedRole] = useState(null)
+  const [roleLoading, setRoleLoading] = useState(false)
   const [isMinimized, setIsMinimized] = useState(false)
   const shouldReduceMotion = useReducedMotion()
+
+  validateEnvVars(['VITE_API_BASE'])
 
   useEffect(() => {
     // Load wizard state from localStorage
@@ -47,6 +90,7 @@ export function OnboardingWizard({ user, onDismiss, onStepComplete }) {
         const parsed = JSON.parse(savedState)
         setSteps(parsed.steps || WIZARD_STEPS)
         setCurrentStep(parsed.currentStep || 0)
+        setSelectedRole(parsed.selectedRole || null)
         setIsMinimized(parsed.isMinimized || false)
       } catch (e) {
         // Ignore parsing errors, use defaults
@@ -59,6 +103,15 @@ export function OnboardingWizard({ user, onDismiss, onStepComplete }) {
         step.id === 'email' ? { ...step, completed: true } : step
       ))
     }
+
+    // Check if user already has a role
+    const userRole = user?.user_metadata?.role || user?.app_metadata?.role || user?.role
+    if (userRole) {
+      setSelectedRole(userRole)
+      setSteps(prev => prev.map(step => 
+        step.id === 'role' ? { ...step, completed: true } : step
+      ))
+    }
   }, [user])
 
   useEffect(() => {
@@ -66,10 +119,11 @@ export function OnboardingWizard({ user, onDismiss, onStepComplete }) {
     const state = {
       steps,
       currentStep,
+      selectedRole,
       isMinimized
     }
     localStorage.setItem('botspot_onboarding_state', JSON.stringify(state))
-  }, [steps, currentStep, isMinimized])
+  }, [steps, currentStep, selectedRole, isMinimized])
 
   const completedSteps = steps.filter(step => step.completed).length
   const isCompleted = completedSteps === steps.length
@@ -91,6 +145,32 @@ export function OnboardingWizard({ user, onDismiss, onStepComplete }) {
     }
   }
 
+  const handleRoleSelect = async (roleId) => {
+    setRoleLoading(true)
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE}/auth/role`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({ role: roleId })
+      })
+
+      if (response.ok) {
+        setSelectedRole(roleId)
+        handleStepComplete('role')
+      } else {
+        const data = await response.json()
+        alert(data.error || 'Failed to save role')
+      }
+    } catch (error) {
+      alert('Network error. Please try again.')
+    } finally {
+      setRoleLoading(false)
+    }
+  }
+
   const handleDismiss = () => {
     localStorage.setItem('botspot_onboarding_dismissed', 'true')
     if (onDismiss) {
@@ -99,6 +179,12 @@ export function OnboardingWizard({ user, onDismiss, onStepComplete }) {
   }
 
   const nextStep = () => {
+    // Block progression if on role step and no role selected
+    if (currentStepData.id === 'role' && !selectedRole) {
+      alert('Please select a role before continuing.')
+      return
+    }
+    
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1)
     }
@@ -130,7 +216,7 @@ export function OnboardingWizard({ user, onDismiss, onStepComplete }) {
                 Welcome to BotSpot! 🎉
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-300">
-                You've completed the onboarding process.
+                You&apos;re all set up as a {selectedRole}.
               </p>
             </div>
           </div>
@@ -187,7 +273,7 @@ export function OnboardingWizard({ user, onDismiss, onStepComplete }) {
               Welcome to BotSpot!
             </h3>
             <p className="text-sm text-gray-600 dark:text-gray-300">
-              Let's get you set up ({completedSteps}/{steps.length} complete)
+              Let&apos;s get you set up ({completedSteps}/{steps.length} complete)
             </p>
           </div>
         </div>
@@ -294,8 +380,61 @@ export function OnboardingWizard({ user, onDismiss, onStepComplete }) {
               onClick={() => handleStepComplete('profile')}
               className="btn-primary"
             >
-              Mark as Complete
+              Profile Complete
             </button>
+          </div>
+        )}
+
+        {currentStepData.id === 'role' && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {ROLE_OPTIONS.map((role) => {
+                const RoleIcon = role.icon
+                const isSelected = selectedRole === role.id
+                
+                return (
+                  <motion.button
+                    key={role.id}
+                    onClick={() => handleRoleSelect(role.id)}
+                    disabled={roleLoading}
+                    whileHover={{ scale: shouldReduceMotion ? 1 : 1.02 }}
+                    whileTap={{ scale: shouldReduceMotion ? 1 : 0.98 }}
+                    className={`p-4 rounded-xl border-2 transition-all ring-focus ${
+                      isSelected
+                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
+                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                    } ${roleLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    aria-pressed={isSelected}
+                    aria-label={`Select ${role.title} role`}
+                  >
+                    <div className="flex flex-col items-center text-center space-y-2">
+                      <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${role.color} flex items-center justify-center text-white`}>
+                        <RoleIcon className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h5 className="font-medium text-gray-900 dark:text-white">
+                          {role.title}
+                        </h5>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          {role.description}
+                        </p>
+                      </div>
+                      {isSelected && (
+                        <CheckCircle className="w-5 h-5 text-primary-500" />
+                      )}
+                    </div>
+                  </motion.button>
+                )
+              })}
+            </div>
+            
+            {selectedRole && (
+              <div className="text-center">
+                <p className="text-sm text-green-600 dark:text-green-400">
+                  ✅ Role selected: {selectedRole}
+                </p>
+              </div>
+            )}
           </div>
         )}
 
@@ -315,7 +454,7 @@ export function OnboardingWizard({ user, onDismiss, onStepComplete }) {
                   onClick={() => handleStepComplete('email')}
                   className="btn-secondary text-sm"
                 >
-                  I've verified my email
+                  I&apos;ve verified my email
                 </button>
               </div>
             )}
@@ -325,7 +464,7 @@ export function OnboardingWizard({ user, onDismiss, onStepComplete }) {
         {currentStepData.id === 'connect' && (
           <div className="space-y-3">
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Connect your first social media account to start automating your content.
+              Connect your social media accounts to start automating your content.
             </p>
             <div className="grid grid-cols-2 gap-2">
               <button className="btn-secondary text-sm">Reddit</button>
@@ -338,20 +477,6 @@ export function OnboardingWizard({ user, onDismiss, onStepComplete }) {
               className="btn-primary text-sm"
             >
               Skip for now
-            </button>
-          </div>
-        )}
-
-        {currentStepData.id === 'explore' && (
-          <div className="space-y-3">
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Take a look around your dashboard to see what's available.
-            </p>
-            <button
-              onClick={() => handleStepComplete('explore')}
-              className="btn-primary"
-            >
-              I'm ready to explore!
             </button>
           </div>
         )}
