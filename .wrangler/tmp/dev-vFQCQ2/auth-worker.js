@@ -333,7 +333,7 @@ var auth_worker_default = {
             }
           });
           const roles = await r.json().catch(() => []);
-          const role = roles?.[0]?.role || "Daily User";
+          const role = roles?.[0]?.role || null;
           data.user_metadata = { ...data.user_metadata || {}, role };
           data.role = role;
         }
