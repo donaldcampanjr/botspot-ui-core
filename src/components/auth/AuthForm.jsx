@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { motion, useReducedMotion } from 'framer-motion'
-import { Eye, EyeOff, Mail, AlertTriangle, CheckCircle, RefreshCw } from 'lucide-react'
+import { Eye, EyeOff, Mail, AlertTriangle, CheckCircle, RefreshCw, User } from 'lucide-react'
 import { validateEnvVars } from '../../utils'
 import { PasswordStrength } from './PasswordStrength'
 
