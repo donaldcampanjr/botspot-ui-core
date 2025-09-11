@@ -48,6 +48,14 @@ export const router = createBrowserRouter([
         path: 'auth/register',
         element: <Register />,
       },
+      {
+        path: 'auth/recovery',
+        element: <Recovery />,
+      },
+      {
+        path: 'auth/verify-email',
+        element: <VerifyEmail />,
+      },
     ],
   },
   {
