@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
-import { CheckCircle, Circle, User, Mail, Link, Sparkles, X, ArrowRight, ArrowLeft } from 'lucide-react'
+import { CheckCircle, User, Mail, Link, Sparkles, X, ArrowRight, ArrowLeft } from 'lucide-react'
 
 const WIZARD_STEPS = [
   {
