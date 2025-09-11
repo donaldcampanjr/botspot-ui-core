@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { motion, useReducedMotion } from 'framer-motion'
-import { Eye, EyeOff, Mail, AlertTriangle, CheckCircle, RefreshCw } from 'lucide-react'
+import { Eye, EyeOff, Mail, AlertTriangle, CheckCircle, RefreshCw, User } from 'lucide-react'
 import { validateEnvVars } from '../../utils'
 import { PasswordStrength } from './PasswordStrength'
 
@@ -146,10 +146,23 @@ export function AuthForm({ mode = 'login' }) {
 
   return (
     <div className="max-w-md w-full mx-auto p-6 sm:p-8 glass-frosted rounded-2xl shadow-lg">
+      {mode === 'register' && (
+        <motion.div
+          initial={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: shouldReduceMotion ? 0 : 0.3 }}
+          className="flex justify-center mb-4"
+        >
+          <div className="w-16 h-16 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
+            <User className="w-8 h-8 text-primary-600 dark:text-primary-400" />
+          </div>
+        </motion.div>
+      )}
+
       <motion.h1
         initial={{ opacity: 0, y: shouldReduceMotion ? 0 : -10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: shouldReduceMotion ? 0 : 0.3 }}
+        transition={{ duration: shouldReduceMotion ? 0 : 0.3, delay: shouldReduceMotion ? 0 : 0.1 }}
         className="text-2xl font-semibold text-gray-900 dark:text-white mb-6 text-center"
       >
         {mode === 'register' ? 'Create your account' : 'Welcome back'}
