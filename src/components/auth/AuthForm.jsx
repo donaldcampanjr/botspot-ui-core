@@ -24,7 +24,13 @@ export function AuthForm({ mode = 'login' }) {
   // Check for initial states from navigation
   useEffect(() => {
     if (location.state?.message) {
-      setSuccess(location.state.message)
+      // Check if message should be shown as error or success
+      const message = location.state.message
+      if (message.includes('Access denied') || message.includes('expired') || message.includes('error')) {
+        setError(message)
+      } else {
+        setSuccess(message)
+      }
     }
     if (location.state?.showResendVerification) {
       setShowResendVerification(true)
