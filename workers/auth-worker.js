@@ -115,32 +115,15 @@ export default {
         autoLogin: false
       }
 
-      // Assign default role in DB (service role bypasses RLS)
-      // If this fails, log but do not block user creation
+      // Note: user_roles insertion is handled by database trigger (on_auth_user_created)
+      // We only need to update user metadata and potentially fetch the role
       if (env.SUPABASE_SERVICE_ROLE_KEY && user?.id) {
-        try {
-          const roleRes = await fetch(`${env.SUPABASE_URL}/rest/v1/user_roles`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              apikey: env.SUPABASE_SERVICE_ROLE_KEY,
-              Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
-              Prefer: 'return=minimal',
-            },
-            body: JSON.stringify({ user_id: user.id, role: 'Daily User' }),
-          })
-          debugInfo.roleEnrichmentAttempts.push({
-            type: 'role_table_insert',
-            success: roleRes.ok,
-            status: roleRes.status
-          })
-        } catch (error) {
-          debugInfo.roleEnrichmentAttempts.push({
-            type: 'role_table_insert',
-            success: false,
-            error: error.message || 'Unknown error'
-          })
-        }
+        // Skip manual role insertion - it's handled by the database trigger
+        debugInfo.roleEnrichmentAttempts.push({
+          type: 'role_table_insert',
+          success: true,
+          status: 'skipped_trigger_handles_it'
+        })
 
         try {
           const metadataRes = await fetch(`${env.SUPABASE_URL}/auth/v1/admin/users/${user.id}`, {
