@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion, useReducedMotion } from 'framer-motion'
-import { Settings, BarChart3, Users, Shield, ExternalLink, Plus } from 'lucide-react'
+import { Settings, BarChart3, Users, Shield, ExternalLink, Plus, Mic, Heart, Star, Briefcase } from 'lucide-react'
 import { validateEnvVars } from '../../utils'
 import { OnboardingWizard } from '../../components/dashboard/OnboardingWizard'
 
@@ -37,10 +37,10 @@ export default function DashboardIndex() {
     // Check if user should see onboarding
     if (user) {
       const dismissed = localStorage.getItem('botspot_onboarding_dismissed')
-      const role = user?.user_metadata?.role || user?.app_metadata?.role || 'Daily User'
+      const role = user?.user_metadata?.role || user?.app_metadata?.role || user?.role
       
-      // Show onboarding for Daily Users who haven't dismissed it
-      if (String(role).toLowerCase() === 'daily user' && !dismissed) {
+      // Show onboarding for users without a role or who haven't dismissed it
+      if (!role || (!dismissed && String(role).toLowerCase() !== 'admin')) {
         setShowOnboarding(true)
       }
     }
@@ -53,43 +53,177 @@ export default function DashboardIndex() {
   }
 
   const email = user?.email || 'User'
-  const roleRaw = user?.user_metadata?.role || user?.app_metadata?.role || 'Daily User'
-  const role = typeof roleRaw === 'string' ? roleRaw : 'Daily User'
+  const roleRaw = user?.user_metadata?.role || user?.app_metadata?.role || user?.role
+  const role = typeof roleRaw === 'string' ? roleRaw : null
   const isAdmin = String(role).toLowerCase() === 'admin'
+  const isInfluencer = String(role).toLowerCase() === 'influencer'
+  const isArtist = String(role).toLowerCase() === 'artist'
+  const isBand = String(role).toLowerCase() === 'band'
+  const isBusiness = String(role).toLowerCase() === 'business'
   const isDailyUser = String(role).toLowerCase() === 'daily user'
-  const isManager = String(role).toLowerCase() === 'manager'
-  const isDeveloper = String(role).toLowerCase() === 'developer'
 
-  const sampleApps = [
-    {
-      name: 'Reddit',
-      description: 'Automate posts and comments on Reddit communities',
-      icon: '🔥',
-      color: 'from-orange-500 to-red-500',
-      connected: false
-    },
-    {
-      name: 'LinkedIn',
-      description: 'Professional networking and content automation',
-      icon: '💼',
-      color: 'from-blue-600 to-blue-700',
-      connected: false
-    },
-    {
-      name: 'Spotify',
-      description: 'Music playlist management and discovery',
-      icon: '🎵',
-      color: 'from-green-500 to-green-600',
-      connected: false
-    },
-    {
-      name: 'X (Twitter)',
-      description: 'Tweet scheduling and engagement automation',
-      icon: '🐦',
-      color: 'from-gray-600 to-gray-700',
-      connected: false
+  // Role-specific app configurations
+  const getRoleSpecificApps = () => {
+    if (isInfluencer) {
+      return [
+        {
+          name: 'Instagram',
+          description: 'Share photos and stories to engage your audience',
+          icon: '📸',
+          color: 'from-pink-500 to-rose-500',
+          connected: false
+        },
+        {
+          name: 'TikTok',
+          description: 'Create viral short-form video content',
+          icon: '🎵',
+          color: 'from-purple-500 to-pink-500',
+          connected: false
+        },
+        {
+          name: 'YouTube',
+          description: 'Upload and manage your video content',
+          icon: '📺',
+          color: 'from-red-500 to-red-600',
+          connected: false
+        },
+        {
+          name: 'Twitter',
+          description: 'Share quick updates and engage in conversations',
+          icon: '🐦',
+          color: 'from-blue-400 to-blue-500',
+          connected: false
+        }
+      ]
+    } else if (isArtist) {
+      return [
+        {
+          name: 'Instagram',
+          description: 'Showcase your artwork and creative process',
+          icon: '🎨',
+          color: 'from-purple-500 to-pink-500',
+          connected: false
+        },
+        {
+          name: 'Behance',
+          description: 'Display your portfolio professionally',
+          icon: '💼',
+          color: 'from-blue-600 to-purple-600',
+          connected: false
+        },
+        {
+          name: 'Pinterest',
+          description: 'Share visual inspiration and artwork',
+          icon: '📌',
+          color: 'from-red-500 to-pink-500',
+          connected: false
+        },
+        {
+          name: 'DeviantArt',
+          description: 'Connect with the art community',
+          icon: '🖼️',
+          color: 'from-green-500 to-teal-500',
+          connected: false
+        }
+      ]
+    } else if (isBand) {
+      return [
+        {
+          name: 'Spotify',
+          description: 'Distribute and promote your music',
+          icon: '🎵',
+          color: 'from-green-500 to-green-600',
+          connected: false
+        },
+        {
+          name: 'SoundCloud',
+          description: 'Share tracks and connect with fans',
+          icon: '🔊',
+          color: 'from-orange-500 to-red-500',
+          connected: false
+        },
+        {
+          name: 'YouTube Music',
+          description: 'Upload music videos and performances',
+          icon: '🎬',
+          color: 'from-red-500 to-red-600',
+          connected: false
+        },
+        {
+          name: 'Bandcamp',
+          description: 'Sell music directly to fans',
+          icon: '💿',
+          color: 'from-blue-500 to-cyan-500',
+          connected: false
+        }
+      ]
+    } else if (isBusiness) {
+      return [
+        {
+          name: 'LinkedIn',
+          description: 'Professional networking and B2B marketing',
+          icon: '💼',
+          color: 'from-blue-600 to-blue-700',
+          connected: false
+        },
+        {
+          name: 'Facebook Business',
+          description: 'Reach customers through targeted ads',
+          icon: '📈',
+          color: 'from-blue-500 to-indigo-600',
+          connected: false
+        },
+        {
+          name: 'Twitter Business',
+          description: 'Customer service and brand awareness',
+          icon: '🏢',
+          color: 'from-gray-600 to-gray-700',
+          connected: false
+        },
+        {
+          name: 'Google My Business',
+          description: 'Local search and customer reviews',
+          icon: '📍',
+          color: 'from-yellow-500 to-orange-500',
+          connected: false
+        }
+      ]
+    } else {
+      // Default/Daily User apps
+      return [
+        {
+          name: 'Reddit',
+          description: 'Participate in community discussions',
+          icon: '🔥',
+          color: 'from-orange-500 to-red-500',
+          connected: false
+        },
+        {
+          name: 'Twitter',
+          description: 'Share thoughts and follow trends',
+          icon: '🐦',
+          color: 'from-gray-600 to-gray-700',
+          connected: false
+        },
+        {
+          name: 'LinkedIn',
+          description: 'Professional networking',
+          icon: '💼',
+          color: 'from-blue-600 to-blue-700',
+          connected: false
+        },
+        {
+          name: 'Facebook',
+          description: 'Connect with friends and family',
+          icon: '👥',
+          color: 'from-blue-500 to-indigo-600',
+          connected: false
+        }
+      ]
     }
-  ]
+  }
+
+  const sampleApps = getRoleSpecificApps()
 
   const handleConnectApp = (appName) => {
     // Placeholder for app connection logic
@@ -102,12 +236,16 @@ export default function DashboardIndex() {
 
   const handleOnboardingStepComplete = (stepId) => {
     console.log(`Onboarding step completed: ${stepId}`)
+    // If role was completed, refresh user data
+    if (stepId === 'role') {
+      window.location.reload()
+    }
   }
 
   return (
     <div className="space-y-6">
-      {/* Onboarding Wizard for Daily Users */}
-      {showOnboarding && isDailyUser && (
+      {/* Onboarding Wizard for users without role or new users */}
+      {showOnboarding && (
         <OnboardingWizard
           user={user}
           onDismiss={handleOnboardingDismiss}
@@ -125,7 +263,7 @@ export default function DashboardIndex() {
           <div className="flex items-center gap-2">
             <span className="text-amber-500">⚠️</span>
             <p className="text-sm text-amber-800 dark:text-amber-200">
-              Your email isn't verified yet. Check your inbox or{' '}
+              Your email isn&apos;t verified yet. Check your inbox or{' '}
               <Link to="/auth/login" className="underline hover:no-underline">
                 resend verification
               </Link>
@@ -147,7 +285,9 @@ export default function DashboardIndex() {
             <h2 className="text-xl font-semibold mb-1 text-gray-900 dark:text-white">
               Welcome, {email.split('@')[0]}
             </h2>
-            <p className="text-gray-600 dark:text-gray-300">Role: {role}</p>
+            <p className="text-gray-600 dark:text-gray-300">
+              Role: {role || 'Not selected'}
+            </p>
             {user?.email_confirmed_at && (
               <p className="text-sm text-green-600 dark:text-green-400 mt-1 flex items-center gap-1">
                 ✅ Email verified
@@ -164,27 +304,39 @@ export default function DashboardIndex() {
                 <span className="text-sm font-medium">Admin</span>
               </Link>
             )}
-            {isManager && (
-              <Link
-                to="/manager"
-                className="flex items-center gap-2 px-3 py-2 bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/30 transition-colors ring-focus"
-              >
-                <Users className="w-4 h-4" />
-                <span className="text-sm font-medium">Team</span>
-              </Link>
-            )}
-            {isDeveloper && (
-              <Link
-                to="/developer"
-                className="flex items-center gap-2 px-3 py-2 bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300 rounded-lg hover:bg-green-200 dark:hover:bg-green-900/30 transition-colors ring-focus"
-              >
-                <BarChart3 className="w-4 h-4" />
-                <span className="text-sm font-medium">Dev Tools</span>
-              </Link>
-            )}
           </div>
         </div>
       </motion.section>
+
+      {/* Role-specific header message */}
+      {role && (
+        <motion.section
+          initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: shouldReduceMotion ? 0 : 0.25, delay: 0.05 }}
+          className="glass rounded-xl p-4"
+        >
+          <div className="flex items-center gap-3">
+            {isInfluencer && <Star className="w-5 h-5 text-purple-500" />}
+            {isArtist && <Heart className="w-5 h-5 text-red-500" />}
+            {isBand && <Mic className="w-5 h-5 text-blue-500" />}
+            {isBusiness && <Briefcase className="w-5 h-5 text-green-500" />}
+            {isDailyUser && <Users className="w-5 h-5 text-gray-500" />}
+            <div>
+              <h3 className="font-medium text-gray-900 dark:text-white">
+                {isInfluencer && "Build your influence and grow your audience"}
+                {isArtist && "Showcase your creativity and connect with fans"}
+                {isBand && "Share your music and grow your fanbase"}
+                {isBusiness && "Expand your reach and grow your business"}
+                {isDailyUser && "Manage your personal social presence"}
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                Connect your platforms and automate your content strategy.
+              </p>
+            </div>
+          </div>
+        </motion.section>
+      )}
 
       {/* Connected Apps Section */}
       <motion.section
@@ -194,11 +346,11 @@ export default function DashboardIndex() {
       >
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Connected Apps
+            {role ? `${role} Platforms` : 'Connected Apps'}
           </h3>
           <button className="flex items-center gap-2 text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 ring-focus rounded">
             <Plus className="w-4 h-4" />
-            Add App
+            Add Platform
           </button>
         </div>
         
@@ -259,13 +411,15 @@ export default function DashboardIndex() {
             <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
               <BarChart3 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
             </div>
-            <h3 className="font-medium text-gray-900 dark:text-white">Features</h3>
+            <h3 className="font-medium text-gray-900 dark:text-white">Analytics</h3>
           </div>
-          <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">Explore what you can do.</p>
-          <Link to="/features" className="btn-primary inline-flex items-center gap-2">
-            <span>Explore</span>
+          <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+            Track your performance across platforms.
+          </p>
+          <button className="btn-primary inline-flex items-center gap-2">
+            <span>View Stats</span>
             <ExternalLink className="w-3 h-3" />
-          </Link>
+          </button>
         </motion.div>
 
         <motion.div
@@ -280,7 +434,9 @@ export default function DashboardIndex() {
             </div>
             <h3 className="font-medium text-gray-900 dark:text-white">Settings</h3>
           </div>
-          <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">Manage your profile and preferences.</p>
+          <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+            Manage your profile and preferences.
+          </p>
           <button className="btn-secondary inline-flex items-center gap-2">
             <span>Configure</span>
             <Settings className="w-3 h-3" />
@@ -299,110 +455,15 @@ export default function DashboardIndex() {
             </div>
             <h3 className="font-medium text-gray-900 dark:text-white">Support</h3>
           </div>
-          <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">Get help and documentation.</p>
+          <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+            Get help and documentation.
+          </p>
           <Link to="/about" className="btn-secondary inline-flex items-center gap-2">
             <span>Contact</span>
             <ExternalLink className="w-3 h-3" />
           </Link>
         </motion.div>
       </div>
-
-      {/* Role-specific Section */}
-      <motion.section
-        initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: shouldReduceMotion ? 0 : 0.25, delay: 0.35 }}
-        className="glass-frosted rounded-2xl p-6"
-      >
-        {isAdmin && (
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-              <Shield className="w-5 h-5 text-red-500" />
-              Admin Dashboard
-            </h3>
-            <p className="text-gray-600 dark:text-gray-300 mb-4">
-              Manage users, system settings, and monitor platform health.
-            </p>
-            <div className="flex gap-3">
-              <Link to="/admin" className="btn-primary">
-                Admin Panel
-              </Link>
-              <Link to="/admin/users" className="btn-secondary">
-                User Management
-              </Link>
-            </div>
-          </div>
-        )}
-        
-        {isManager && (
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-              <Users className="w-5 h-5 text-blue-500" />
-              Manager Dashboard
-            </h3>
-            <p className="text-gray-600 dark:text-gray-300 mb-4">
-              Oversee team performance and manage automation workflows.
-            </p>
-            <div className="flex gap-3">
-              <Link to="/manager" className="btn-primary">
-                Team Overview
-              </Link>
-              <Link to="/manager/team" className="btn-secondary">
-                Team Management
-              </Link>
-            </div>
-          </div>
-        )}
-        
-        {isDeveloper && (
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-              <BarChart3 className="w-5 h-5 text-green-500" />
-              Developer Dashboard
-            </h3>
-            <p className="text-gray-600 dark:text-gray-300 mb-4">
-              Access API documentation, bot development tools, and analytics.
-            </p>
-            <div className="flex gap-3">
-              <Link to="/developer" className="btn-primary">
-                Dev Console
-              </Link>
-              <Link to="/developer/api" className="btn-secondary">
-                API Docs
-              </Link>
-            </div>
-          </div>
-        )}
-        
-        {isDailyUser && (
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              Your BotSpot Experience
-            </h3>
-            <p className="text-gray-600 dark:text-gray-300 mb-4">
-              Connect your social accounts and start automating your online presence.
-            </p>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-primary-50 dark:bg-primary-900/20 rounded-lg p-3">
-                <h4 className="text-sm font-medium text-primary-700 dark:text-primary-300 mb-1">
-                  Getting Started
-                </h4>
-                <p className="text-xs text-primary-600 dark:text-primary-400">
-                  Follow the onboarding wizard to set up your first automation.
-                </p>
-              </div>
-              <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3">
-                <h4 className="text-sm font-medium text-green-700 dark:text-green-300 mb-1">
-                  Next Steps
-                </h4>
-                <p className="text-xs text-green-600 dark:text-green-400">
-                  Connect apps and explore automation templates.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-      </motion.section>
     </div>
   )
 }
