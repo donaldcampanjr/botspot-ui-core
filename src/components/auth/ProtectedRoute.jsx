@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { motion, useReducedMotion } from 'framer-motion'
+import { Loader2 } from 'lucide-react'
 import { validateEnvVars } from '../../utils'
 
 export function ProtectedRoute({ children }) {
@@ -22,10 +23,24 @@ export function ProtectedRoute({ children }) {
         if (res.ok && data && data.loggedIn) {
           setAuthorized(true)
         } else {
-          navigate('/auth/login', { replace: true, state: { from: location } })
+          // Redirect to login with state indicating where user came from
+          navigate('/auth/login', {
+            replace: true,
+            state: {
+              from: location,
+              message: 'Please sign in to access this page.'
+            }
+          })
         }
       } catch (e) {
-        navigate('/auth/login', { replace: true, state: { from: location } })
+        console.error('Auth verification error:', e)
+        navigate('/auth/login', {
+          replace: true,
+          state: {
+            from: location,
+            message: 'Session expired. Please sign in again.'
+          }
+        })
       } finally {
         setLoading(false)
       }
@@ -42,11 +57,12 @@ export function ProtectedRoute({ children }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: shouldReduceMotion ? 0 : 0.3 }}
-          className="text-gray-600 dark:text-gray-300"
+          className="flex items-center gap-3 text-gray-600 dark:text-gray-300"
           role="status"
           aria-live="polite"
         >
-          Checking session…
+          <Loader2 className="w-5 h-5 animate-spin" />
+          <span>Checking session…</span>
         </motion.div>
       </div>
     )
