@@ -10,6 +10,8 @@ import { Features } from '../pages/Features'
 import { About } from '../pages/About'
 import Login from '../pages/auth/Login'
 import Register from '../pages/auth/Register'
+import Recovery from '../pages/auth/Recovery'
+import VerifyEmail from '../pages/auth/VerifyEmail'
 
 // Dashboard pages
 import { AdminDashboard } from '../pages/dashboard/AdminDashboard'
@@ -45,6 +47,14 @@ export const router = createBrowserRouter([
       {
         path: 'auth/register',
         element: <Register />,
+      },
+      {
+        path: 'auth/recovery',
+        element: <Recovery />,
+      },
+      {
+        path: 'auth/verify-email',
+        element: <VerifyEmail />,
       },
     ],
   },
